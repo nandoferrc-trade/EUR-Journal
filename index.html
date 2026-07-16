@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EUR/USD · Trading Journal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1117;--sur:#181C27;--sur2:#1E2330;--sur3:#252A3A;
+  --bd:#2A2F42;--bd2:#333849;
+  --tx:#E8EAF0;--tx2:#9CA3B8;--tx3:#5C6480;
+  --gr:#1DB87A;--grd:#0F6E49;--grb:#0A2A1E;
+  --rd:#E24B4A;--rdb:#2A0F0F;
+  --bl:#3B82F6;--blb:#0F1E3A;
+  --am:#F59E0B;--amb:#2A1F0A;
+  --pu:#9B7FE8;--pub:#1A1528;
+  --ra:8px;--ra2:12px;
+}
+body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;color:var(--tx);background:var(--bg);min-height:100vh}
+.app{display:flex;flex-direction:column;min-height:100vh}
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--bd);background:var(--sur);flex-wrap:wrap;gap:8px}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.badge{background:var(--gr);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.6px}
+.hdr-title{font-size:15px;font-weight:500}
+.hdr-bal{font-size:13px;color:var(--tx2)}
+.hdr-acct{font-size:11px;color:var(--tx3);margin-left:6px}
+.btn-sm{background:none;border:1px solid var(--bd2);border-radius:var(--ra);padding:5px 11px;font-size:12px;color:var(--tx2);cursor:pointer}
+.btn-sm:hover{background:var(--sur3)}
+/* NAV */
+nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflow-x:auto}
+.nb{padding:11px 18px;font-size:13px;color:var(--tx2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+.nb.active{color:var(--tx);border-bottom-color:var(--gr);font-weight:500}
+.nb:hover{color:var(--tx);background:var(--sur3)}
+/* CONTENT */
+.content{flex:1;overflow-y:auto}
+.tab{display:none;padding:20px}
+.tab.active{display:block}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-bottom:20px}
+.kpi{background:var(--sur);border:1px solid var(--bd);border-radius:var(--ra2);padding:12px 14px}
+.kpi-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kpi-val{font-size:20px;font-weight:600}
+.kpi-val.pos{color:var(--gr)}.kpi-val.neg{color:var(--rd)}
+.kpi-sub{font-size:10px;color:var(--tx3);margin-top:2px}
+/* LAYOUT */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--sur);border:1px solid var(--bd);border-radius:var(--ra2);padding:16px;margin-bottom:14px}
+.card-ttl{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+/* PROGRESS */
+.pw{margin-bottom:14px}
+.pl{display:flex;justify-content:space-between;font-size:12px;color:var(--tx2);margin-bottom:5px}
+.pb{height:7px;background:var(--sur3);border-radius:4px;overflow:hidden}
+.pf{height:100%;border-radius:4px;transition:width .3s}
+.pg{background:var(--gr)}.pa{background:var(--am)}.pr{background:var(--rd)}
+.pn{font-size:10px;color:var(--tx3);margin-top:3px}
+/* STATS */
+.sr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:12.5px}
+.sr:last-child{border-bottom:none}
+.sl2{color:var(--tx2)}.sv{font-weight:500}
+/* DAY GRID */
+.dg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px}
+.dc{border-radius:6px;padding:8px 4px;text-align:center;border:1px solid var(--bd)}
+.dc .dn{font-size:10px;color:var(--tx3);margin-bottom:3px}
+.dc .dv{font-size:13px;font-weight:600}
+/* SESSION */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.sc2{border-radius:6px;padding:8px 4px;text-align:center;border:1px solid var(--bd);background:var(--sur3)}
+.sc2 .sn{font-size:10px;color:var(--tx3)}
+.sc2 .sv2{font-size:16px;font-weight:600;margin-top:2px}
+/* ALERT */
+.alert-c{background:var(--amb);border:1px solid var(--am);border-radius:var(--ra2);padding:12px 14px;font-size:12.5px;color:var(--am);margin-bottom:14px;display:none}
+.alert-c.show{display:block}
+/* FORM */
+.tf{max-width:700px}
+.blk{background:var(--sur);border:1px solid var(--bd);border-radius:var(--ra2);padding:16px;margin-bottom:12px}
+.blk.locked{opacity:.22;pointer-events:none;user-select:none}
+.bh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.bt2{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}
+.bnum{width:24px;height:24px;border-radius:50%;background:var(--gr);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bnum.lk{background:var(--sur3);color:var(--tx3);border:1px solid var(--bd)}
+.bsc{font-size:13px;font-weight:700;color:var(--gr)}
+.bsc.sw{color:var(--am)}.bsc.sz{color:var(--rd)}
+/* LEVEL BUTTONS */
+.lw{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.lb{width:100%;padding:10px 14px;border-radius:var(--ra);border:1px solid var(--bd2);background:var(--sur2);color:var(--tx2);font-size:13px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
+.lb:hover{background:var(--sur3)}
+.lb .pt{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--sur3);color:var(--tx3);white-space:nowrap;flex-shrink:0}
+.lb.ss{background:var(--grb);border-color:var(--gr);color:var(--gr)}
+.lb.ss .pt{background:var(--grb);color:var(--gr)}
+.lb.sw2{background:var(--amb);border-color:var(--am);color:var(--am)}
+.lb.sw2 .pt{background:var(--amb);color:var(--am)}
+.lb.sn2{background:var(--rdb);border-color:var(--rd);color:var(--rd)}
+.lb.sn2 .pt{background:var(--rdb);color:var(--rd)}
+/* SCORE DISPLAY */
+.sd{background:var(--sur2);border:1px solid var(--bd);border-radius:var(--ra2);padding:14px 16px;margin-bottom:12px}
+.sd-in{display:flex;align-items:center;gap:16px}
+.sd-big{font-size:36px;font-weight:700;color:var(--gr);min-width:60px}
+.sd-big.m{color:var(--am)}.sd-big.lo{color:var(--rd)}
+.sd-bw{flex:1}
+.sd-bt{height:10px;background:var(--sur3);border-radius:5px;overflow:hidden;margin-bottom:6px}
+.sd-bf{height:100%;border-radius:5px;background:var(--gr);transition:width .3s}
+.sd-bf.m{background:var(--am)}.sd-bf.lo{background:var(--rd)}
+.sd-lbl{font-size:11px;color:var(--tx3)}
+/* FORM FIELDS */
+.sdiv{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:6px}
+.ta{font-size:9px;background:var(--blb);color:var(--bl);padding:1px 6px;border-radius:6px;text-transform:none;letter-spacing:0;font-weight:500}
+.tm{font-size:9px;background:var(--amb);color:var(--am);padding:1px 6px;border-radius:6px;text-transform:none;letter-spacing:0;font-weight:500}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.fi{display:flex;flex-direction:column;gap:4px}
+.fi label{font-size:11px;color:var(--tx3)}
+.fi input,.fi select,.fi textarea{padding:8px 10px;font-size:13px;border-radius:var(--ra);border:1px solid var(--bd2);background:var(--sur2);color:var(--tx)}
+.fi input:focus,.fi select:focus,.fi textarea:focus{outline:none;border-color:var(--gr)}
+.fi textarea{resize:vertical;min-height:56px}
+.subn{font-size:11px;color:var(--tx3);margin-top:-4px;margin-bottom:10px;font-style:italic}
+/* EMOTION */
+.eg{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px;margin-bottom:10px}
+.eb{padding:9px;border-radius:var(--ra);border:1px solid var(--bd);background:var(--sur2);cursor:pointer;text-align:left}
+.eb .en{font-size:12px;font-weight:500;display:block;color:var(--tx)}
+.eb .et{font-size:10px;color:var(--tx3);display:block;margin-top:2px;line-height:1.3}
+.eb.esel{border-width:1.5px}
+.ef.esel{background:var(--grb);border-color:var(--gr)}.ef.esel .en{color:var(--gr)}
+.en1.esel{background:var(--blb);border-color:var(--bl)}.en1.esel .en{color:var(--bl)}
+.ea.esel{background:var(--amb);border-color:var(--am)}.ea.esel .en{color:var(--am)}
+.efr.esel{background:#2A150F;border-color:#E2724A}.efr.esel .en{color:#E2724A}
+.ec.esel{background:var(--pub);border-color:var(--pu)}.ec.esel .en{color:var(--pu)}
+.etip{font-size:12px;color:var(--tx2);background:var(--sur3);border-radius:var(--ra);padding:8px 12px;margin-bottom:10px;display:none}
+/* CALC BOX */
+.cb{background:var(--sur2);border-radius:var(--ra);padding:10px 14px;margin-bottom:10px;border:1px solid var(--bd)}
+.cbr{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0}
+.cbr .l{color:var(--tx3)}.cbr .v{font-weight:500}
+/* RESULT */
+.rbw{display:flex;gap:8px;margin-bottom:10px}
+.rb{flex:1;padding:8px;border-radius:var(--ra);border:1px solid var(--bd2);background:none;font-size:13px;cursor:pointer;color:var(--tx2)}
+.rb:hover{background:var(--sur3)}
+.rb.sw3{background:var(--grb);border-color:var(--gr);color:var(--gr);font-weight:500}
+.rb.sl3{background:var(--rdb);border-color:var(--rd);color:var(--rd);font-weight:500}
+.rb.sb3{background:var(--blb);border-color:var(--bl);color:var(--bl);font-weight:500}
+/* EXIT TYPE */
+.et-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:10px}
+.et-btn{padding:8px 10px;border-radius:var(--ra);border:1px solid var(--bd2);background:var(--sur2);font-size:12px;cursor:pointer;color:var(--tx2);text-align:left}
+.et-btn:hover{background:var(--sur3)}
+.et-btn.sel{border-color:var(--gr);background:var(--grb);color:var(--gr);font-weight:500}
+.et-btn.sel-b{border-color:var(--am);background:var(--amb);color:var(--am);font-weight:500}
+/* SAVE */
+.save-btn{background:var(--gr);color:#fff;border:none;border-radius:var(--ra);padding:11px 24px;font-size:14px;font-weight:500;cursor:pointer;width:100%;margin-top:8px}
+.save-btn:hover{background:var(--grd)}
+.save-btn.open-btn{background:var(--am)}
+.save-btn.open-btn:hover{background:#c97d06}
+.badge-open{display:inline-block;background:var(--amb);color:var(--am);border:1px solid var(--am);font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.msg{border-radius:var(--ra);padding:10px 14px;font-size:12px;margin-top:8px;display:none}
+/* GESTION */
+.go{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx2);cursor:pointer;padding:8px 10px;border-radius:var(--ra);border:1px solid var(--bd);background:var(--sur2);margin-bottom:6px}
+/* TRADES TABLE */
+.ttbl{width:100%;border-collapse:collapse;font-size:12px}
+.ttbl th{text-align:left;padding:8px;font-size:11px;color:var(--tx3);font-weight:400;border-bottom:1px solid var(--bd);white-space:nowrap}
+.ttbl td{padding:7px 8px;border-bottom:1px solid var(--bd);color:var(--tx2);white-space:nowrap}
+.ttbl tr:hover td{background:var(--sur2)}
+.bw2{background:var(--grb);color:var(--gr);padding:2px 7px;border-radius:8px;font-size:11px;font-weight:500}
+.bl2b{background:var(--rdb);color:var(--rd);padding:2px 7px;border-radius:8px;font-size:11px;font-weight:500}
+.bb2{background:var(--blb);color:var(--bl);padding:2px 7px;border-radius:8px;font-size:11px;font-weight:500}
+.empty{text-align:center;padding:48px 20px;color:var(--tx3)}
+/* CALC TAB */
+.rtbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.rtbl th{text-align:left;padding:7px 10px;font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--bd)}
+.rtbl td{padding:7px 10px;border-bottom:1px solid var(--bd);color:var(--tx2)}
+.rtbl tr:hover td{background:var(--sur2)}
+.rtbl td:last-child{font-weight:600;color:var(--tx)}
+.comm-note{font-size:11px;color:var(--tx3);background:var(--sur2);border-radius:var(--ra);padding:8px 12px;margin-top:8px;border-left:3px solid var(--am)}
+/* MODALS */
+.mo{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-start;justify-content:center;z-index:200;overflow-y:auto;padding:20px}
+.modal{background:var(--sur);border-radius:var(--ra2);border:1px solid var(--bd);padding:24px;width:360px;max-width:95%;margin:auto}
+.modal h3{font-size:16px;font-weight:500;margin-bottom:16px}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:12px;color:var(--tx2);margin-bottom:4px}
+.fg input,.fg select{width:100%;padding:8px 10px;font-size:14px;border-radius:var(--ra);border:1px solid var(--bd2);background:var(--sur2);color:var(--tx)}
+.btn-p{background:var(--gr);color:#fff;border:none;border-radius:var(--ra);padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;width:100%}
+.btn-p:hover{background:var(--grd)}
+.btn-g{background:none;border:1px solid var(--bd2);border-radius:var(--ra);padding:8px 16px;font-size:13px;cursor:pointer;color:var(--tx2);width:100%;margin-top:8px}
+.btn-g:hover{background:var(--sur3)}
+/* DETAIL MODAL */
+.dmo{background:var(--sur);border-radius:var(--ra2);border:1px solid var(--bd);width:680px;max-width:95%;margin:auto}
+.dmh{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--bd);gap:8px;flex-wrap:wrap}
+.dmb{padding:20px;max-height:80vh;overflow-y:auto}
+.dsec{margin-bottom:18px}
+.dtt{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--bd)}
+.drow{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bd);font-size:12.5px;gap:8px}
+.drow:last-child{border-bottom:none}
+.dl{color:var(--tx3);flex:0 0 44%}.dv2{font-weight:500;text-align:right;word-break:break-word}
+.dpill{display:inline-block;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:500}
+.nb2{background:var(--sur2);border-radius:var(--ra);padding:10px 12px;font-size:12.5px;color:var(--tx2);line-height:1.6;border:1px solid var(--bd);white-space:pre-wrap;word-break:break-word;margin-bottom:8px}
+.lb2{background:var(--sur2);border-radius:var(--ra);padding:8px 12px;border:1px solid var(--bd)}
+.lb2 a{color:var(--bl);font-size:12.5px;word-break:break-all;text-decoration:none}
+.lb2 a:hover{text-decoration:underline}
+.sdr{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sdrl{font-size:12px;color:var(--tx2);flex:0 0 160px}
+.sdrp{font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px}
+.sdrv{font-size:12px;font-weight:600;width:40px;text-align:right}
+@media(max-width:600px){
+  .two-col{grid-template-columns:1fr}
+  .fr{grid-template-columns:1fr}
+  .fr3{grid-template-columns:1fr 1fr}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .eg{grid-template-columns:repeat(2,1fr)}
+  .et-grid{grid-template-columns:1fr}
+}
+.conv-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.conv-btn{width:38px;height:38px;border-radius:var(--ra);border:1px solid var(--bd2);background:var(--sur2);color:var(--tx2);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.conv-btn:hover{background:var(--sur3)}
+.conv-btn.csel-hi{background:var(--gr);border-color:var(--gr);color:#fff;font-weight:700}
+.conv-btn.csel-mid{background:var(--am);border-color:var(--am);color:#fff;font-weight:700}
+.conv-btn.csel-lo{background:var(--rd);border-color:var(--rd);color:#fff;font-weight:700}
+.psy-grid{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.psy-btn{width:100%;padding:9px 14px;border-radius:var(--ra);border:1px solid var(--bd2);background:var(--sur2);color:var(--tx2);font-size:12.5px;cursor:pointer;text-align:left}
+.psy-btn:hover{background:var(--sur3)}
+.psy-btn.psel{background:var(--grb);border-color:var(--gr);color:var(--gr);font-weight:500}
+.psy-btn.psel-w{background:var(--amb);border-color:var(--am);color:var(--am);font-weight:500}
+.psy-btn.psel-b{background:var(--rdb);border-color:var(--rd);color:var(--rd);font-weight:500}
+/* PSYCHOLOGY */
+.conv-grid{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.conv-btn{width:38px;height:38px;border-radius:var(--ra);border:1px solid var(--bd2);background:var(--sur2);color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.conv-btn:hover{background:var(--sur3)}
+.conv-btn.sel-low{background:var(--rdb);border-color:var(--rd);color:var(--rd)}
+.conv-btn.sel-mid{background:var(--amb);border-color:var(--am);color:var(--am)}
+.conv-btn.sel-high{background:var(--grb);border-color:var(--gr);color:var(--gr)}
+.psy-grid{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.psy-btn{width:100%;padding:9px 14px;border-radius:var(--ra);border:1px solid var(--bd2);background:var(--sur2);color:var(--tx2);font-size:12.5px;cursor:pointer;text-align:left}
+.psy-btn:hover{background:var(--sur3)}
+.psy-btn.sel{background:var(--grb);border-color:var(--gr);color:var(--gr);font-weight:500}
+.psy-btn.sel-warn{background:var(--amb);border-color:var(--am);color:var(--am);font-weight:500}
+.psy-btn.sel-bad{background:var(--rdb);border-color:var(--rd);color:var(--rd);font-weight:500}
+.racha-info{font-size:12px;padding:6px 12px;border-radius:var(--ra);margin-top:8px;font-weight:500}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-l">
+    <span class="badge">EUR/USD</span>
+    <span class="hdr-title">Trading Journal</span>
+    <span class="hdr-acct" id="hdr-acct"></span>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+    <span class="hdr-bal" id="hbal">—</span>
+    <button class="btn-sm" onclick="openCfg()">⚙ Config</button>
+    <button class="btn-sm" onclick="exportJSON()">↓ Backup</button>
+    <button class="btn-sm" onclick="document.getElementById('impF').click()">↑ Restaurar</button>
+    <input type="file" id="impF" accept=".json" style="display:none" onchange="importJSON(event)">
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <button class="nb active" onclick="sw('overview',this)">▣ Overview</button>
+  <button class="nb" onclick="sw('form',this)">＋ Nuevo trade</button>
+  <button class="nb" onclick="sw('trades',this)">≡ Trades</button>
+  <button class="nb" onclick="sw('calc',this)">∑ Calculadora</button>
+  <button class="nb" onclick="sw('analisis',this)">🧠 Análisis</button>
+</nav>
+
+<div class="content">
+
+<!-- ═══ OVERVIEW ═══ -->
+<div class="tab active" id="tab-overview">
+  <div class="alert-c" id="ddAlert"></div>
+  <div class="kpi-grid" id="kpi-grid"></div>
+  <div class="two-col">
+    <div>
+      <div class="card"><div class="card-ttl">Equity curve</div><div style="position:relative;height:150px"><canvas id="eqC"></canvas></div></div>
+      <div class="card"><div class="card-ttl">P&L por día de semana</div><div class="dg" id="daygrid"></div></div>
+      <div class="card">
+        <div class="card-ttl">Sesión de mercado</div>
+        <div class="sg" id="sessgrid"></div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:8px" id="peakhr"></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">RR dejado en la mesa — últimos 15 trades</div>
+        <div style="position:relative;height:100px"><canvas id="rrGapC"></canvas></div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:6px" id="rrgaptxt"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-ttl">Drawdown</div>
+        <div class="pw">
+          <div class="pl"><span>Diario</span><span id="ddDp">0.00%</span></div>
+          <div class="pb"><div class="pf pg" id="ddDb" style="width:0%"></div></div>
+          <div class="pn">Límite: <span id="ddDl">2.00</span>% · Pérdidas hoy: <span id="ddDu">$0.00</span></div>
+        </div>
+        <div class="pw">
+          <div class="pl"><span>Semanal</span><span id="ddWp">0.00%</span></div>
+          <div class="pb"><div class="pf pg" id="ddWb" style="width:0%"></div></div>
+          <div class="pn">Límite: <span id="ddWl">4.00</span>% · Pérdidas semana: <span id="ddWu">$0.00</span></div>
+        </div>
+        <div class="pw" style="margin-bottom:0">
+          <div class="pl"><span>Desde equity peak histórico</span><span id="ddPp">0.00%</span></div>
+          <div class="pb"><div class="pf pg" id="ddPb" style="width:0%"></div></div>
+          <div class="pn">Peak: <span id="ddPeak">—</span> · Caída: <span id="ddPu">$0.00</span></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-ttl">Estadísticas clave</div><div id="statslist"></div></div>
+      <div class="card"><div class="card-ttl">Win rate por score de calidad</div><div style="position:relative;height:120px"><canvas id="scoreC"></canvas></div></div>
+      <div class="card"><div class="card-ttl">Tipo de salida — distribución</div><div id="exitstats"></div></div>
+      <div class="card"><div class="card-ttl">Disciplina & contrafactual</div><div id="discstats"></div></div>
+      <div class="card"><div class="card-ttl">Psicología — Win rate por convicción</div><div style="position:relative;height:110px"><canvas id="convC"></canvas></div><div style="font-size:11px;color:var(--tx3);margin-top:6px" id="conv-insight"></div></div>
+      <div class="card"><div class="card-ttl">Psicología — Pensamiento dominante</div><div id="pens-stats"></div></div>
+      <div class="card"><div class="card-ttl">Psicología — Racha previa vs resultado</div><div id="racha-stats"></div></div>
+      <div class="card"><div class="card-ttl">Psicología — Proceso y presión</div><div id="proceso-stats"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NUEVO TRADE ═══ -->
+<div class="tab" id="tab-form">
+<div class="tf">
+
+  <!-- ESTADO DEL DÍA -->
+  <div class="blk">
+    <div class="bh"><div class="bt2"><div class="bnum">★</div> Estado del día</div></div>
+    <div class="sdiv">Estado emocional</div>
+    <div class="eg">
+      <button class="eb ef" onclick="selEmo(this,'ENFOCADO')"><span class="en">Enfocado</span><span class="et">Estado óptimo. Ejecuta el plan.</span></button>
+      <button class="eb en1" onclick="selEmo(this,'NEUTRO')"><span class="en">Neutro</span><span class="et">Sé selectivo con setups.</span></button>
+      <button class="eb ea" onclick="selEmo(this,'ANSIOSO')"><span class="en">Ansioso</span><span class="et">Reduce posición al 50%.</span></button>
+      <button class="eb efr" onclick="selEmo(this,'FRUSTRADO')"><span class="en">Frustrado</span><span class="et">Considera no operar hoy.</span></button>
+      <button class="eb ec" onclick="selEmo(this,'CANSADO')"><span class="en">Cansado</span><span class="et">Solo setups A+, sin forzar.</span></button>
+    </div>
+    <div class="etip" id="etip"></div>
+    <div class="fr">
+      <div class="fi"><label>¿Dormiste bien?</label><select id="slept"><option value="">—</option><option>Sí</option><option>No</option></select></div>
+      <div class="fi"><label>¿Revisaste el plan?</label><select id="rplan"><option value="">—</option><option>Sí</option><option>No</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fi"><label>Bias del día</label><select id="bias"><option value="">—</option><option>Alcista</option><option>Bajista</option><option>Neutral / sin bias</option></select></div>
+      <div class="fi"><label>¿Noticias de alto impacto hoy?</label><select id="news"><option value="">—</option><option>Sí — antes de mi entrada</option><option>Sí — después de cerrar</option><option>No</option></select></div>
+    </div>
+    <div class="fi"><label>Notas de apertura</label><textarea id="nopen" placeholder="Contexto macro, niveles clave, expectativas de sesión..."></textarea></div>
+  </div>
+
+  <!-- SCORE DISPLAY -->
+  <div class="sd">
+    <div class="sd-in">
+      <div class="sd-big" id="sd-big">—</div>
+      <div class="sd-bw">
+        <div class="sd-bt"><div class="sd-bf" id="sd-bar" style="width:0%"></div></div>
+        <div class="sd-lbl" id="sd-lbl">Completa el checklist para obtener el score del setup</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOQUE 1 — CONTEXTO -->
+  <div class="blk" id="bc1">
+    <div class="bh">
+      <div class="bt2"><div class="bnum" id="bn1">1</div> Contexto — Estructura W1 / D1</div>
+      <span class="bsc" id="bs1">— pts</span>
+    </div>
+    <p style="font-size:12px;color:var(--tx3);margin-bottom:10px;font-style:italic">¿Estoy en una zona donde realmente vale la pena buscar una operación?</p>
+    <div class="lw">
+      <button class="lb" id="b1-s" onclick="setLv(1,'s',this)"><span>Fractal limpio + zona Premium/Discount definida con 3 niveles claros de descuento</span><span class="pt">20 pts</span></button>
+      <button class="lb" id="b1-w" onclick="setLv(1,'w',this)"><span>Fractal existe pero zona amplia o dudosa — niveles de descuento poco claros</span><span class="pt">10 pts</span></button>
+      <button class="lb" id="b1-n" onclick="setLv(1,'n',this)"><span>No hay estructura clara → No operar</span><span class="pt">0 pts · Bloquea</span></button>
+    </div>
+  </div>
+
+  <!-- BLOQUE 2 — CONFIRMACIÓN -->
+  <div class="blk locked" id="bc2">
+    <div class="bh">
+      <div class="bt2"><div class="bnum lk" id="bn2">2</div> Confirmación — Cambio de estructura 4H / 1H</div>
+      <span class="bsc" id="bs2">— pts</span>
+    </div>
+    <p style="font-size:12px;color:var(--tx3);margin-bottom:10px;font-style:italic">¿El mercado está confirmando mi hipótesis?</p>
+    <div class="lw">
+      <button class="lb" id="b2-s" onclick="setLv(2,'s',this)"><span>Cambio de estructura limpio con fuerza + zona de reacción clara con 3 niveles</span><span class="pt">20 pts</span></button>
+      <button class="lb" id="b2-w" onclick="setLv(2,'w',this)"><span>Cambio de estructura con mecha o BOS con mecha — niveles poco claros</span><span class="pt">10 pts</span></button>
+      <button class="lb" id="b2-n" onclick="setLv(2,'n',this)"><span>No hay cambio de carácter → No operar</span><span class="pt">0 pts · Bloquea</span></button>
+    </div>
+  </div>
+
+  <!-- BLOQUE 3 — ENTRADA -->
+  <div class="blk locked" id="bc3">
+    <div class="bh">
+      <div class="bt2"><div class="bnum lk" id="bn3">3</div> Entrada — Trigger 5M / 1M / 15M</div>
+      <span class="bsc" id="bs3">— pts</span>
+    </div>
+    <p style="font-size:12px;color:var(--tx3);margin-bottom:10px;font-style:italic">¿Tengo una entrada A+?</p>
+    <div class="lw">
+      <button class="lb" id="b3-s" onclick="setLv(3,'s',this)"><span>Cambio de estructura limpio con fuerza + zona de reacción clara con 3 niveles</span><span class="pt">20 pts</span></button>
+      <button class="lb" id="b3-w" onclick="setLv(3,'w',this)"><span>Cambio de estructura con mecha o BOS con mecha — trigger dudoso</span><span class="pt">10 pts</span></button>
+      <button class="lb" id="b3-n" onclick="setLv(3,'n',this)"><span>No hay cambio de carácter claro → No operar</span><span class="pt">0 pts · Bloquea</span></button>
+    </div>
+  </div>
+
+  <!-- BLOQUE 4 — RIESGO -->
+  <div class="blk locked" id="bc4">
+    <div class="bh">
+      <div class="bt2"><div class="bnum lk" id="bn4">4</div> Riesgo</div>
+      <span class="bsc" id="bs4">— pts</span>
+    </div>
+    <p style="font-size:12px;color:var(--tx3);margin-bottom:10px;font-style:italic">¿La pérdida está dentro de mi plan?</p>
+    <div class="lw">
+      <button class="lb" id="b4-s" onclick="setLv(4,'s',this)"><span>Dentro del plan + SL lógico y ajustado (0.40% riesgo / máx 0.80% día / 2.00% semana)</span><span class="pt">20 pts</span></button>
+      <button class="lb" id="b4-w" onclick="setLv(4,'w',this)"><span>Dentro del plan pero SL amplio o subóptimo</span><span class="pt">10 pts</span></button>
+      <button class="lb" id="b4-n" onclick="setLv(4,'n',this)"><span>Fuera del plan → No operar</span><span class="pt">0 pts · Bloquea</span></button>
+    </div>
+  </div>
+
+  <!-- REGISTRO -->
+  <div class="blk locked" id="bcreg">
+    <div class="bh"><div class="bt2"><div class="bnum lk" id="bnreg">R</div> Registro del trade</div></div>
+
+    <div class="sdiv">Datos de la operación <span class="tm">manual</span></div>
+    <div class="fr">
+      <div class="fi"><label>Dirección</label><select id="tdir" onchange="calcDerived()"><option value="">—</option><option>Buy</option><option>Sell</option></select></div>
+      <div class="fi"><label>Lotaje</label><input type="number" id="tlot" placeholder="0.01" step="0.01" min="0.01" oninput="calcDerived()"></div>
+    </div>
+    <div class="fr">
+      <div class="fi"><label>Fecha entrada</label><input type="date" id="tdi"></div>
+      <div class="fi"><label>Hora entrada (Bogotá UTC-5)</label><input type="time" id="tti" onchange="calcDerived()"></div>
+    </div>
+    <div class="fi" style="margin-bottom:10px"><label>Fecha de salida</label><input type="date" id="tdo"></div>
+
+    <div class="sdiv">Precios — para RR y MFE/MAE automático <span class="tm">manual</span></div>
+    <div class="subn">Mira el gráfico post-cierre y registra los extremos de precio alcanzados.</div>
+    <div class="fr3">
+      <div class="fi"><label>Precio entrada</label><input type="number" id="pentry" step="0.00001" placeholder="1.08500" oninput="calcDerived()"></div>
+      <div class="fi"><label>Stop Loss</label><input type="number" id="psl" step="0.00001" placeholder="1.08300" oninput="calcDerived()"></div>
+      <div class="fi"><label>Take Profit</label><input type="number" id="ptp" step="0.00001" placeholder="1.08900" oninput="calcDerived()"></div>
+    </div>
+    <div class="fr">
+      <div class="fi"><label>Precio máx. a favor (MFE)</label><input type="number" id="pmfe" step="0.00001" placeholder="1.08850" oninput="calcDerived()"></div>
+      <div class="fi"><label>Precio máx. en contra (MAE)</label><input type="number" id="pmae" step="0.00001" placeholder="1.08400" oninput="calcDerived()"></div>
+    </div>
+    <div class="fi" style="margin-bottom:10px"><label>Precio de cierre real</label><input type="number" id="pclose" step="0.00001" placeholder="1.08750" oninput="calcDerived()"></div>
+
+    <div class="sdiv">Resultados calculados <span class="ta">automático</span></div>
+    <div class="cb">
+      <div class="cbr"><span class="l">R:R planeado (TP vs SL)</span><span class="v" id="out-rrplan">—</span></div>
+      <div class="cbr"><span class="l">R:R final (cierre vs SL)</span><span class="v" id="out-rrfinal">—</span></div>
+      <div class="cbr"><span class="l">MFE — RR máximo disponible</span><span class="v" id="out-mfe">—</span></div>
+      <div class="cbr"><span class="l">MAE — RR máximo en contra</span><span class="v" id="out-mae">—</span></div>
+      <div class="cbr"><span class="l">RR dejado en la mesa</span><span class="v" id="out-rrgap">—</span></div>
+      <div class="cbr"><span class="l">P&L estimado (sin comisión)</span><span class="v" id="out-pnl">—</span></div>
+      <div class="cbr"><span class="l">Comisión adicional ($4/lote RT)</span><span class="v" id="out-comm">—</span></div>
+      <div class="cbr"><span class="l">Costo total si pierdo (SL+comisión)</span><span class="v" id="out-net">—</span></div>
+      <div class="cbr"><span class="l">Sesión de mercado</span><span class="v" id="out-session">—</span></div>
+    </div>
+    <div class="fi" style="margin-bottom:10px"><label>P&L real en USD (tal como aparece en la plataforma)</label><input type="number" id="tpnl" placeholder="-20.00" step="0.01"></div>
+
+    <div class="sdiv">Resultado <span class="tm">manual</span></div>
+    <div class="rbw">
+      <button class="rb" id="rwin" onclick="setRes('WIN',this)">Win</button>
+      <button class="rb" id="rloss" onclick="setRes('LOSS',this)">Loss</button>
+      <button class="rb" id="rbe" onclick="setRes('BE',this)">Breakeven</button>
+    </div>
+
+    <div class="sdiv">Psicología — Pre-trade <span class="tm">manual</span></div>
+    <p style="font-size:11px;color:var(--tx3);margin-bottom:10px;font-style:italic">Llena esto antes de ejecutar el trade. Será correlacionado con el resultado.</p>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">Racha previa (calculada automáticamente)</div>
+      <div class="racha-info" id="racha-display" style="background:var(--sur3);color:var(--tx3)">—</div>
+    </div>
+
+    <div class="fi" style="margin-bottom:12px">
+      <label>Nivel de convicción al entrar</label>
+      <div class="conv-grid" id="conv-grid">
+        <button class="conv-btn" onclick="setConv(1,this)">1</button>
+        <button class="conv-btn" onclick="setConv(2,this)">2</button>
+        <button class="conv-btn" onclick="setConv(3,this)">3</button>
+        <button class="conv-btn" onclick="setConv(4,this)">4</button>
+        <button class="conv-btn" onclick="setConv(5,this)">5</button>
+        <button class="conv-btn" onclick="setConv(6,this)">6</button>
+        <button class="conv-btn" onclick="setConv(7,this)">7</button>
+        <button class="conv-btn" onclick="setConv(8,this)">8</button>
+        <button class="conv-btn" onclick="setConv(9,this)">9</button>
+        <button class="conv-btn" onclick="setConv(10,this)">10</button>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:4px">1 = Mucha duda · 10 = Convicción total</div>
+    </div>
+
+    <div class="fi" style="margin-bottom:12px">
+      <label>Pensamiento dominante al entrar</label>
+      <div class="psy-grid" id="pens-grid">
+        <button class="psy-btn" onclick="setPens('ejecucion',this)">🎯 En modo ejecución — análisis claro, sin dudas</button>
+        <button class="psy-btn" onclick="setPens('duda-setup',this)">🤔 Dudé pero el setup cumplía los criterios</button>
+        <button class="psy-btn" onclick="setPens('exceso-confianza',this)">😎 Sentía que era "seguro" — exceso de confianza</button>
+        <button class="psy-btn" onclick="setPens('revanche',this)">😤 Quería recuperar pérdida anterior</button>
+        <button class="psy-btn" onclick="setPens('fomo',this)">⚡ Miedo a perder el movimiento (FOMO)</button>
+        <button class="psy-btn" onclick="setPens('presion-inactivo',this)">😟 Presión por no haber operado en un tiempo</button>
+      </div>
+    </div>
+
+    <div class="sdiv">Psicología — Post-trade <span class="tm">completar al cerrar</span></div>
+    <p style="font-size:11px;color:var(--tx3);margin-bottom:10px;font-style:italic">Completa esto cuando vuelvas a cerrar el registro. Solo si el trade ya cerró.</p>
+
+    <div class="fi" style="margin-bottom:12px">
+      <label>Estado emocional al cerrar el trade</label>
+      <div class="psy-grid" id="post-emo-grid">
+        <button class="psy-btn" onclick="setPostEmo('satisfaccion',this)">😌 Satisfacción — ejecuté bien sin importar el resultado</button>
+        <button class="psy-btn" onclick="setPostEmo('alivio',this)">😮‍💨 Alivio — me alegra que terminó</button>
+        <button class="psy-btn" onclick="setPostEmo('frustracion',this)">😤 Frustración — el resultado no fue lo esperado</button>
+        <button class="psy-btn" onclick="setPostEmo('euforia',this)">🤩 Euforia — resultado mejor de lo esperado</button>
+        <button class="psy-btn" onclick="setPostEmo('indiferencia',this)">😐 Indiferencia — resultado neutro, sin carga emocional</button>
+      </div>
+    </div>
+
+    <div class="fi" style="margin-bottom:12px">
+      <label>¿Respetaste el proceso en este trade?</label>
+      <div class="psy-grid" id="proceso-grid">
+        <button class="psy-btn" onclick="setProceso('si',this)">✅ Sí completamente — sin desviaciones</button>
+        <button class="psy-btn" onclick="setProceso('parcial',this)">⚠️ Parcialmente — hubo una desviación</button>
+        <button class="psy-btn" onclick="setProceso('no',this)">❌ No — operé fuera del plan</button>
+      </div>
+    </div>
+
+    <div id="desviacion-wrap" style="display:none;margin-bottom:12px">
+      <label style="font-size:11px;color:var(--tx3);display:block;margin-bottom:6px">¿En qué punto te desviaste?</label>
+      <div class="psy-grid" id="desv-grid">
+        <button class="psy-btn" onclick="setDesv('movi-sl',this)">📍 Moví el SL</button>
+        <button class="psy-btn" onclick="setDesv('cierre-miedo',this)">😰 Cerré antes del objetivo por miedo</button>
+        <button class="psy-btn" onclick="setDesv('sin-confirmacion',this)">⏩ Entré sin esperar la confirmación</button>
+        <button class="psy-btn" onclick="setDesv('aumente-size',this)">📈 Aumenté el tamaño de posición</button>
+        <button class="psy-btn" onclick="setDesv('fomo-ejecucion',this)">⚡ Tomé el trade en modo FOMO</button>
+        <button class="psy-btn" onclick="setDesv('revanche-ejecucion',this)">😤 Tomé el trade en modo revanchismo</button>
+      </div>
+    </div>
+
+    <div class="fi" style="margin-bottom:12px">
+      <label>Presión sentida durante el trade</label>
+      <div class="conv-grid" id="presion-grid">
+        <button class="conv-btn" onclick="setPresion(1,this)">1</button>
+        <button class="conv-btn" onclick="setPresion(2,this)">2</button>
+        <button class="conv-btn" onclick="setPresion(3,this)">3</button>
+        <button class="conv-btn" onclick="setPresion(4,this)">4</button>
+        <button class="conv-btn" onclick="setPresion(5,this)">5</button>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:4px">1 = Sin presión, completamente tranquilo · 5 = Alta presión, difícil mantener el plan</div>
+    </div>
+
+    <div class="sdiv">Screenshot & notas <span class="tm">manual</span></div>
+    <div class="fi" style="margin-bottom:8px"><label>Link screenshot (TradingView / Notion / Loom)</label><input type="url" id="tss" placeholder="https://..."></div>
+    <div class="fi" style="margin-bottom:8px"><label>Notas rápidas del trade</label><textarea id="tnotes" placeholder="Setup, contexto, errores, aprendizajes..."></textarea></div>
+    <div class="fi" style="margin-bottom:14px"><label>Notas de cierre (post-sesión)</label><textarea id="tnc" placeholder="Qué salió bien, qué mejoraría..."></textarea></div>
+  </div>
+
+  <!-- TIPO DE SALIDA (al final) -->
+  <div class="blk locked" id="bc5">
+    <div class="bh"><div class="bt2"><div class="bnum lk" id="bn5">S</div> Tipo de salida</div></div>
+    <p style="font-size:12px;color:var(--tx3);margin-bottom:12px;font-style:italic">¿Por qué cerraste donde cerraste? Esto mide el origen del RR gap. Puedes completar esto después si el trade sigue abierto.</p>
+    <div class="et-grid" id="et-grid">
+      <button class="et-btn" onclick="setExit('zona-estructura',this)">🎯 Zona de estructura opuesta</button>
+      <button class="et-btn" onclick="setExit('trailing-stop',this)">📈 Trailing stop activado</button>
+      <button class="et-btn" onclick="setExit('objetivo-rr',this)">✅ Objetivo RR alcanzado</button>
+      <button class="et-btn" onclick="setExit('cierre-emocional',this)">😰 Cierre emocional / anticipado</button>
+      <button class="et-btn" onclick="setExit('noticia',this)">📰 Noticia de alto impacto</button>
+      <button class="et-btn" onclick="setExit('viernes-pm',this)">📅 Viernes PM — fin de semana</button>
+      <button class="et-btn" onclick="setExit('sl-tocado',this)">🛑 SL tocado</button>
+      <button class="et-btn" onclick="setExit('be-manual',this)">⚖️ Breakeven manual</button>
+    </div>
+  </div>
+
+  <!-- BOTONES DE GUARDADO -->
+  <div style="max-width:700px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+    <button class="save-btn" onclick="saveTrade('complete')" style="margin-top:0">💾 Guardar trade completo</button>
+    <button class="save-btn" onclick="saveTrade('open')" style="margin-top:0;background:var(--am);border:none">⏳ Guardar en curso</button>
+  </div>
+  <div class="msg" id="savemsg" style="max-width:700px"></div>
+</div>
+</div>
+
+<!-- ═══ TRADES ═══ -->
+<div class="tab" id="tab-trades">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <span style="font-size:14px;font-weight:500" id="tcount">0 trades</span>
+    <button class="btn-sm" onclick="exportCSV()">↓ CSV</button>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="ttbl">
+      <thead><tr><th>#</th><th>Fecha</th><th>Dir</th><th>Score</th><th>RR plan</th><th>RR final</th><th>RR gap</th><th>P&L neto</th><th>Resultado</th><th>Salida</th><th>Sesión</th><th>Acciones</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="tempty"><div style="font-size:32px;margin-bottom:10px">📓</div><p style="font-size:14px;font-weight:500;margin-bottom:4px">Sin trades aún</p><p style="font-size:12px">Registra tu primera operación en "Nuevo trade"</p></div>
+  </div>
+</div>
+
+<!-- ═══ CALCULADORA ═══ -->
+<div class="tab" id="tab-calc">
+<div style="max-width:560px">
+  <div class="card">
+    <div class="card-ttl">Parámetros — EUR/USD · The5ers</div>
+    <div class="fr" style="margin-bottom:6px">
+      <div class="fi"><label>Balance ($)</label><input type="number" id="cbal" placeholder="10000" oninput="calcRef()"></div>
+      <div class="fi"><label>Riesgo %</label><input type="number" id="crisk" value="0.4" step="0.1" min="0.1" oninput="calcRef()"></div>
+    </div>
+    <div class="comm-note">⚠ Comisión The5ers: $4 por lote round trip · La comisión es un costo ADICIONAL al riesgo — si el SL toca, pierdes el riesgo + la comisión</div>
+    <p style="font-size:11px;color:var(--tx3);margin:8px 0">Pip value EUR/USD ≈ $10 por lote estándar · Contract size: 100,000 · Min lot: 0.01 · Step: 0.01</p>
+    <table class="rtbl">
+      <thead><tr><th>SL (pips)</th><th>$ riesgo (si SL toca)</th><th>Lotes exacto</th><th>Lotes (↓)</th><th>Comisión adicional</th><th>Costo total si pierdo</th><th>% real cuenta</th></tr></thead>
+      <tbody id="reftbody"></tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-ttl">Cálculo personalizado</div>
+    <div class="fr">
+      <div class="fi"><label>SL exacto (pips)</label><input type="number" id="csl" placeholder="12.5" step="0.5" oninput="calcCustom()"></div>
+      <div class="fi"><label>Riesgo % (override)</label><input type="number" id="crisk2" placeholder="0.4" step="0.1" oninput="calcCustom()"></div>
+    </div>
+    <div id="customout" style="color:var(--tx3);font-size:13px;margin-top:4px">Ingresa el SL para calcular</div>
+  </div>
+</div>
+</div>
+
+</div></div>
+
+<!-- ═══ ANÁLISIS PSICOLÓGICO ═══ -->
+<div class="tab" id="tab-analisis">
+  <div id="analisis-empty" style="text-align:center;padding:48px 20px;color:var(--tx3);display:none">
+    <div style="font-size:32px;margin-bottom:10px">🧠</div>
+    <p style="font-size:14px;font-weight:500;margin-bottom:6px">Necesitas al menos 10 trades con datos de psicología</p>
+    <p style="font-size:12px">Registra más trades completando los campos de pre-trade y post-trade</p>
+  </div>
+  <div id="analisis-content">
+    <div class="card" style="border-left:3px solid var(--pu);margin-bottom:14px">
+      <div class="card-ttl">🧠 Resumen ejecutivo — patrones identificados</div>
+      <div id="exec-summary" style="font-size:13px;color:var(--tx2);line-height:1.8"></div>
+    </div>
+    <div id="alertas-wrap" style="margin-bottom:14px"></div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-ttl">Win rate por nivel de convicción (1-10)</div>
+        <div style="position:relative;height:180px"><canvas id="aC1"></canvas></div>
+        <div id="aC1-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Pensamiento dominante → Win rate</div>
+        <div style="position:relative;height:180px"><canvas id="aC2"></canvas></div>
+        <div id="aC2-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-ttl">Racha previa → Win rate siguiente trade</div>
+        <div style="position:relative;height:160px"><canvas id="aC3"></canvas></div>
+        <div id="aC3-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Proceso respetado → Win rate & P&L</div>
+        <div style="position:relative;height:160px"><canvas id="aC4"></canvas></div>
+        <div id="aC4-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-ttl">Presión sentida → WIN vs LOSS (promedio)</div>
+        <div style="position:relative;height:160px"><canvas id="aC5"></canvas></div>
+        <div id="aC5-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Evolución semanal — convicción promedio & Win rate</div>
+        <div style="position:relative;height:160px"><canvas id="aC6"></canvas></div>
+        <div id="aC6-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-ttl">Tabla completa — todas las correlaciones psicológicas</div>
+      <div style="overflow-x:auto">
+        <table class="rtbl"><thead><tr><th>Categoría</th><th>Valor</th><th>Trades</th><th>Win rate</th><th>P&L promedio</th><th>Señal</th></tr></thead>
+        <tbody id="psych-tbody"></tbody></table>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <button class="save-btn" style="max-width:280px;display:inline-block" onclick="exportReporte()">↓ Exportar reporte de performance</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="mo" id="cfgmodal" style="display:none">
+  <div class="modal">
+    <h3>Configuración del journal</h3>
+    <div class="fg"><label>Número / código de cuenta</label><input type="text" id="cfgacct" placeholder="Ej: The5ers #12345 · $100k"></div>
+    <div class="fg"><label>Balance inicial ($)</label><input type="number" id="cfgbal" placeholder="10000" step="100"></div>
+    <div class="fg"><label>Riesgo por trade (%)</label><input type="number" id="cfgrisk" value="0.4" step="0.1" min="0.1" max="2"></div>
+    <div class="fg"><label>Drawdown diario límite (%)</label><input type="number" id="cfgddd" value="2" step="0.5"></div>
+    <div class="fg"><label>Drawdown semanal límite (%)</label><input type="number" id="cfgddw" value="4" step="0.5"></div>
+    <button class="btn-p" onclick="saveCfg()">Guardar</button>
+    <button class="btn-g" onclick="closeCfg()">Cancelar</button>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="mo" id="detailmodal" style="display:none" onclick="if(event.target===this)closeDetail()">
+  <div class="dmo">
+    <div class="dmh">
+      <span style="font-size:15px;font-weight:600" id="dm-title">Detalle del trade</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn-sm" id="dm-edit">✏ Editar</button>
+        <button class="btn-sm" style="color:var(--rd);border-color:var(--rd)" id="dm-del">✕ Eliminar</button>
+        <button class="btn-sm" onclick="closeDetail()">Cerrar</button>
+      </div>
+    </div>
+    <div class="dmb" id="dm-body"></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="mo" id="editmodal" style="display:none" onclick="if(event.target===this)closeEdit()">
+  <div class="modal" style="width:520px;max-width:95%">
+    <h3>Editar trade</h3>
+    <div id="edit-body"></div>
+    <button class="btn-p" onclick="saveEdit()">Guardar cambios</button>
+    <button class="btn-g" onclick="closeEdit()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+const SC='eur_j7_cfg', ST='eur_j7_trd';
+let cfg={acct:'',balance:0,risk:0.4,ddD:2,ddW:4};
+let trades=[];
+let curRes=null, curEmo='', curExit=null;
+let curConv=null, curPens=null, curPostEmo=null, curProceso=null, curDesv=null, curPresion=null;
+let blv={1:null,2:null,3:null,4:null};
+let eqI=null, rrI=null, scI=null, convI=null, editIdx=null;
+
+const PENS_LABELS={
+  'ejecucion':'🎯 En modo ejecución',
+  'duda-setup':'🤔 Dudé pero el setup cumplía',
+  'exceso-confianza':'😎 Exceso de confianza',
+  'revanche':'😤 Quería recuperar pérdida',
+  'fomo':'⚡ FOMO — miedo a perder el movimiento',
+  'presion-inactivo':'😟 Presión por inactividad'
+};
+const POSTEMO_LABELS={
+  'satisfaccion':'😌 Satisfacción',
+  'alivio':'😮‍💨 Alivio',
+  'frustracion':'😤 Frustración',
+  'euforia':'🤩 Euforia',
+  'indiferencia':'😐 Indiferencia'
+};
+const PROCESO_LABELS={
+  'si':'✅ Sí completamente',
+  'parcial':'⚠️ Parcialmente',
+  'no':'❌ No — fuera del plan'
+};
+const DESV_LABELS={
+  'movi-sl':'📍 Moví el SL',
+  'cierre-miedo':'😰 Cerré antes por miedo',
+  'sin-confirmacion':'⏩ Entré sin confirmación',
+  'aumente-size':'📈 Aumenté el tamaño',
+  'fomo-ejecucion':'⚡ Trade en modo FOMO',
+  'revanche-ejecucion':'😤 Trade en modo revanchismo'
+};
+
+function getStreakInfo(){
+  // Auto-calculate current streak from last 3 closed trades
+  const closed=[...trades].filter(t=>t.status!=='open').sort((a,b)=>(a.di||'')>(b.di||'')?1:-1);
+  if(closed.length===0) return {label:'Neutro — primer trade',type:'neutro'};
+  const last=closed.slice(-3);
+  const lastResult=last[last.length-1].result;
+  const streak=last.filter(t=>t.result===lastResult).length;
+  if(lastResult==='WIN'){
+    if(streak>=2) return {label:`Racha ganadora — ${streak} WIN seguidos`,type:'ganando'};
+    return {label:'Último trade: WIN',type:'neutro'};
+  }
+  if(lastResult==='LOSS'){
+    if(streak>=2) return {label:`Racha perdedora — ${streak} LOSS seguidos ⚠`,type:'perdiendo'};
+    return {label:'Último trade: LOSS',type:'neutro'};
+  }
+  return {label:'Último trade: BE',type:'neutro'};
+}
+
+function setConv(val,btn){
+  curConv=val;
+  document.querySelectorAll('.conv-btn').forEach(b=>b.className='conv-btn');
+  const cls=val<=3?'sel-low':val<=6?'sel-mid':'sel-high';
+  btn.className='conv-btn '+cls;
+}
+function setPresion(val,btn){
+  curPresion=val;
+  document.querySelectorAll('#presion-grid .conv-btn').forEach(b=>b.className='conv-btn');
+  const cls=val<=2?'sel-high':val<=3?'sel-mid':'sel-low'; // inverted: low pressure = good
+  btn.className='conv-btn '+cls;
+}
+function setPens(val,btn){
+  curPens=val;
+  document.querySelectorAll('#pens-grid .psy-btn').forEach(b=>b.className='psy-btn');
+  const goodPens=['ejecucion'];
+  const warnPens=['duda-setup'];
+  const cls=goodPens.includes(val)?'sel':warnPens.includes(val)?'sel-warn':'sel-bad';
+  btn.className='psy-btn '+cls;
+}
+function setPostEmo(val,btn){
+  curPostEmo=val;
+  document.querySelectorAll('#post-emo-grid .psy-btn').forEach(b=>b.className='psy-btn');
+  const goodEmo=['satisfaccion','indiferencia'];
+  const warnEmo=['alivio','euforia'];
+  const cls=goodEmo.includes(val)?'sel':warnEmo.includes(val)?'sel-warn':'sel-bad';
+  btn.className='psy-btn '+cls;
+}
+function setProceso(val,btn){
+  curProceso=val;
+  document.querySelectorAll('#proceso-grid .psy-btn').forEach(b=>b.className='psy-btn');
+  const cls=val==='si'?'sel':val==='parcial'?'sel-warn':'sel-bad';
+  btn.className='psy-btn '+cls;
+  document.getElementById('desviacion-wrap').style.display=(val==='parcial'||val==='no')?'block':'none';
+}
+function setDesv(val,btn){
+  curDesv=val;
+  document.querySelectorAll('#desv-grid .psy-btn').forEach(b=>b.className='psy-btn sel-warn');
+  btn.className='psy-btn sel-bad';
+}
+
+function updateRachaDisplay(){
+  const info=getStreakInfo();
+  const el=document.getElementById('racha-display');
+  if(!el) return;
+  const col=info.type==='ganando'?'var(--gr)':info.type==='perdiendo'?'var(--rd)':'var(--tx3)';
+  const bg=info.type==='ganando'?'var(--grb)':info.type==='perdiendo'?'var(--rdb)':'var(--sur3)';
+  el.textContent=info.label;
+  el.style.color=col;
+  el.style.background=bg;
+}
+const ETIPS={ENFOCADO:'Estado óptimo — ejecuta el plan sin improvisar.',NEUTRO:'Aceptable — sé muy selectivo con los setups hoy.',ANSIOSO:'Reduce el tamaño de la posición al 50% hoy.',FRUSTRADO:'Considera no operar hoy. Preserva el capital.',CANSADO:'Fatiga afecta el juicio — solo setups A+, sin forzar.'};
+const BLBL={1:'Contexto W1/D1',2:'Confirmación 4H/1H',3:'Entrada 5M/1M',4:'Riesgo'};
+const EXITLBL={'zona-estructura':'Zona de estructura opuesta','trailing-stop':'Trailing stop','objetivo-rr':'Objetivo RR alcanzado','cierre-emocional':'Cierre emocional/anticipado','noticia':'Noticia alto impacto','viernes-pm':'Viernes PM','sl-tocado':'SL tocado','be-manual':'Breakeven manual'};
+const EXITGOOD=['zona-estructura','trailing-stop','objetivo-rr','viernes-pm'];
+
+// ── SESIONES (Bogotá UTC-5) ──
+function getSess(t){
+  if(!t) return null;
+  const[h,m]=[parseInt(t.split(':')[0]),parseInt(t.split(':')[1]||0)];
+  const mins=h*60+m;
+  if(mins>=420&&mins<960) return 'New York';   // 7:00-16:00
+  if(mins>=1020||mins<120) return 'Asia';       // 17:00-2:00
+  if(mins>=180&&mins<420) return 'Londres';     // 3:00-7:00
+  return 'Session Overlap';
+}
+
+// ── CHECKLIST CON SCORE ──
+function setLv(b,lv,btn){
+  blv[b]=lv;
+  ['s','w','n'].forEach(l=>{const el=document.getElementById('b'+b+'-'+l);if(el)el.className='lb';});
+  btn.className='lb '+(lv==='s'?'ss':lv==='w'?'sw2':'sn2');
+  const pts=lv==='s'?20:lv==='w'?10:0;
+  const bsEl=document.getElementById('bs'+b);
+  bsEl.textContent=pts+' pts';
+  bsEl.className='bsc'+(lv==='w'?' sw':lv==='n'?' sz':'');
+  document.getElementById('bn'+b).className='bnum';
+  if(lv==='n'){for(let i=b+1;i<=4;i++)lockB(i);lockB('reg');lockB(5);}
+  else{if(b<4)unlockB(b+1);else{unlockB('reg');unlockB(5);}}
+  updateScore();
+}
+
+function updateScore(){
+  const pts={s:20,w:10,n:0};
+  const hasN=Object.values(blv).some(v=>v==='n');
+  const filled=Object.values(blv).filter(v=>v!==null).length;
+  const total=hasN?0:Object.values(blv).reduce((s,v)=>s+(v?pts[v]:0),0);
+  const el=document.getElementById('sd-big');
+  const bar=document.getElementById('sd-bar');
+  const lbl=document.getElementById('sd-lbl');
+  if(filled===0){el.textContent='—';bar.style.width='0%';lbl.textContent='Completa el checklist para obtener el score del setup';return;}
+  el.textContent=total;
+  const pct=total/80*100;
+  bar.style.width=pct+'%';
+  el.className='sd-big'+(total>=60?'':total>=40?' m':' lo');
+  bar.className='sd-bf'+(total>=60?'':total>=40?' m':' lo');
+  lbl.textContent=hasN?'Setup inválido — no operar':total===80?'Score A+ — condiciones óptimas':total>=60?'Setup sólido — operable':total>=40?'Setup débil — considera reducir tamaño':'Setup muy débil';
+}
+
+function lockB(id){const el=document.getElementById('bc'+id);if(el)el.classList.add('locked');const bn=document.getElementById('bn'+id);if(bn)bn.className='bnum lk';}
+function unlockB(id){const el=document.getElementById('bc'+id);if(el)el.classList.remove('locked');const bn=document.getElementById('bn'+id);if(bn)bn.className='bnum';}
+
+// ── INIT ──
+function init(){
+  try{const c=localStorage.getItem(SC);if(c)cfg=JSON.parse(c);}catch(e){}
+  try{const t=localStorage.getItem(ST);if(t)trades=JSON.parse(t);}catch(e){}
+  setToday();
+  if(!cfg.balance)openCfg();else renderAll();
+}
+function persist(){localStorage.setItem(SC,JSON.stringify(cfg));localStorage.setItem(ST,JSON.stringify(trades));}
+function setToday(){
+  const now=new Date();
+  const di=document.getElementById('tdi');if(di)di.value=now.toISOString().split('T')[0];
+  const ti=document.getElementById('tti');if(ti)ti.value=now.toTimeString().slice(0,5);
+}
+function sw(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');btn.classList.add('active');
+  if(name==='overview')renderOverview();
+  if(name==='trades')renderList();
+  if(name==='form')updateRachaDisplay();
+  if(name==='analisis')renderAnalisis();
+  if(name==='calc'){document.getElementById('cbal').value=cfg.balance||'';calcRef();}
+}
+function openCfg(){
+  document.getElementById('cfgmodal').style.display='flex';
+  document.getElementById('cfgacct').value=cfg.acct||'';
+  if(cfg.balance)document.getElementById('cfgbal').value=cfg.balance;
+  document.getElementById('cfgrisk').value=cfg.risk;
+  document.getElementById('cfgddd').value=cfg.ddD;
+  document.getElementById('cfgddw').value=cfg.ddW;
+}
+function closeCfg(){document.getElementById('cfgmodal').style.display='none';}
+function saveCfg(){
+  cfg.acct=document.getElementById('cfgacct').value.trim();
+  cfg.balance=parseFloat(document.getElementById('cfgbal').value)||0;
+  cfg.risk=parseFloat(document.getElementById('cfgrisk').value)||0.4;
+  cfg.ddD=parseFloat(document.getElementById('cfgddd').value)||2;
+  cfg.ddW=parseFloat(document.getElementById('cfgddw').value)||4;
+  persist();closeCfg();renderAll();
+}
+function renderAll(){
+  document.getElementById('hbal').textContent=cfg.balance?'$'+cfg.balance.toLocaleString('en-US',{minimumFractionDigits:2}):'—';
+  document.getElementById('hdr-acct').textContent=cfg.acct?'· '+cfg.acct:'';
+  renderOverview();renderList();
+}
+
+// ── CALC DERIVED ──
+function calcDerived(){
+  const entry=parseFloat(document.getElementById('pentry').value);
+  const sl=parseFloat(document.getElementById('psl').value);
+  const tp=parseFloat(document.getElementById('ptp').value);
+  const mfe=parseFloat(document.getElementById('pmfe').value);
+  const mae=parseFloat(document.getElementById('pmae').value);
+  const close=parseFloat(document.getElementById('pclose').value);
+  const dir=document.getElementById('tdir').value;
+  const lot=parseFloat(document.getElementById('tlot').value)||0;
+  const time=document.getElementById('tti').value;
+  document.getElementById('out-session').textContent=getSess(time)||'—';
+  const ids=['out-rrplan','out-rrfinal','out-mfe','out-mae','out-rrgap','out-pnl','out-comm','out-net'];
+  if(!entry||!sl||!dir){ids.forEach(i=>document.getElementById(i).textContent='—');return;}
+  const rd=Math.abs(entry-sl), dm=dir==='Buy'?1:-1;
+  const pipVal=10; // $10 per pip per standard lot
+  document.getElementById('out-rrplan').textContent=tp?(Math.abs(tp-entry)/rd).toFixed(2):'—';
+  let rf=null;
+  if(close){rf=((close-entry)*dm)/rd;document.getElementById('out-rrfinal').textContent=rf.toFixed(2);}
+  else document.getElementById('out-rrfinal').textContent='—';
+  let mfR=null;
+  if(mfe){mfR=((mfe-entry)*dm)/rd;document.getElementById('out-mfe').textContent=mfR.toFixed(2)+' R';}
+  else document.getElementById('out-mfe').textContent='—';
+  if(mae)document.getElementById('out-mae').textContent=(((mae-entry)*dm)/rd).toFixed(2)+' R';
+  else document.getElementById('out-mae').textContent='—';
+  if(mfR!==null&&rf!==null)document.getElementById('out-rrgap').textContent=(mfR-rf>=0?'+':'')+(mfR-rf).toFixed(2)+' R';
+  else document.getElementById('out-rrgap').textContent='—';
+  if(rf!==null&&lot>0){
+    const slPips=rd*10000; // convert price to pips
+    const pnlBrut=rf*(cfg.balance*cfg.risk/100);
+    const comm=4*lot;
+    // Si gana: P&L neto = ganancia - comisión
+    // Si pierde: costo total = pérdida + comisión
+    const pnlNet=pnlBrut>=0?pnlBrut-comm:pnlBrut-comm;
+    document.getElementById('out-pnl').textContent='$'+pnlBrut.toFixed(2);
+    document.getElementById('out-comm').textContent='+$'+comm.toFixed(2)+' (siempre)';
+    document.getElementById('out-net').textContent='$'+pnlNet.toFixed(2);
+    if(!document.getElementById('tpnl').value) document.getElementById('tpnl').placeholder=pnlNet.toFixed(2);
+  } else {document.getElementById('out-pnl').textContent='—';document.getElementById('out-comm').textContent='—';document.getElementById('out-net').textContent='—';}
+}
+
+function toggleCF(){document.getElementById('cfbox').style.display=document.getElementById('ttook').value.startsWith('no-')?'block':'none';}
+function toggleEN(){document.getElementById('exec-note-wrap').style.display=document.getElementById('exec-plan').value.startsWith('No')?'block':'none';}
+function setExit(val,btn){
+  curExit=val;
+  document.querySelectorAll('.et-btn').forEach(b=>b.className='et-btn');
+  btn.className='et-btn '+(EXITGOOD.includes(val)?'sel':'sel-b');
+}
+
+// ── STATS ──
+function getStats(){
+  const closed=trades.filter(t=>t.status!=='open');
+  const openCount=trades.filter(t=>t.status==='open').length;
+  const total=closed.length;
+  const wins=closed.filter(t=>t.result==='WIN');
+  const losses=closed.filter(t=>t.result==='LOSS');
+  const bes=closed.filter(t=>t.result==='BE');
+  const wr=total?wins.length/total:0;
+  const lr=total?losses.length/total:0;
+  const totalPnl=closed.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  const wAmts=wins.map(t=>parseFloat(t.pnl)||0).filter(v=>v!==0);
+  const lAmts=losses.map(t=>parseFloat(t.pnl)||0).filter(v=>v!==0);
+  const avgW=wAmts.length?wAmts.reduce((a,b)=>a+b,0)/wAmts.length:0;
+  const avgL=lAmts.length?lAmts.reduce((a,b)=>a+b,0)/lAmts.length:0;
+  // RR promedio
+  const rrAll=closed.filter(t=>t.rrFinal!=null).map(t=>t.rrFinal);
+  const rrWins=wins.filter(t=>t.rrFinal!=null).map(t=>t.rrFinal);
+  const avgRRall=rrAll.length?rrAll.reduce((a,b)=>a+b,0)/rrAll.length:0;
+  const avgRRwins=rrWins.length?rrWins.reduce((a,b)=>a+b,0)/rrWins.length:0;
+  // EV = (WR × RR avg ganadores) − (LR × 1)
+  const evR=rrWins.length&&losses.length?(wr*avgRRwins)-(lr*1):rrWins.length?(wr*avgRRwins):0;
+  const evUSD=evR*(cfg.balance*cfg.risk/100);
+  // Sharpe
+  const allPnls=closed.filter(t=>parseFloat(t.pnl)!==0&&!isNaN(parseFloat(t.pnl))).map(t=>parseFloat(t.pnl));
+  const avgPnl=allPnls.length?allPnls.reduce((a,b)=>a+b,0)/allPnls.length:0;
+  const variance=allPnls.length>1?allPnls.reduce((s,v)=>s+Math.pow(v-avgPnl,2),0)/(allPnls.length-1):0;
+  const sharpe=Math.sqrt(variance)>0?avgPnl/Math.sqrt(variance):0;
+  // Days
+  const today=new Date().toISOString().split('T')[0];
+  const mon=getMonday();
+  const todayPnl=closed.filter(t=>t.di===today).reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  const wkPnl=closed.filter(t=>t.di>=mon).reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  const ddDayAmt=closed.filter(t=>t.di===today&&(parseFloat(t.pnl)||0)<0).reduce((s,t)=>s+Math.abs(parseFloat(t.pnl)),0);
+  const ddWkAmt=closed.filter(t=>t.di>=mon&&(parseFloat(t.pnl)||0)<0).reduce((s,t)=>s+Math.abs(parseFloat(t.pnl)),0);
+  const dayPnl=[0,0,0,0,0];
+  closed.forEach(t=>{if(!t.di)return;const d=new Date(t.di+'T12:00:00').getDay();const i=d===1?0:d===2?1:d===3?2:d===4?3:d===5?4:-1;if(i>=0)dayPnl[i]+=(parseFloat(t.pnl)||0);});
+  const sC={'New York':0,'Asia':0,'Londres':0,'Session Overlap':0};
+  const hrC={};
+  closed.forEach(t=>{if(t.session&&sC.hasOwnProperty(t.session))sC[t.session]++;if(t.ti){const h=t.ti.split(':')[0]+':00';hrC[h]=(hrC[h]||0)+1;}});
+  let pH='—',pCnt=0;Object.entries(hrC).forEach(([h,c])=>{if(c>pCnt){pCnt=c;pH=h;}});
+  const gapsArr=closed.filter(t=>t.mfeRR!=null&&t.rrFinal!=null).map(t=>t.mfeRR-t.rrFinal);
+  const avgGap=gapsArr.length?gapsArr.reduce((a,b)=>a+b,0)/gapsArr.length:0;
+  let peak=cfg.balance,rb=cfg.balance;
+  [...closed].sort((a,b)=>(a.di||'')>(b.di||'')?1:-1).forEach(t=>{rb+=(parseFloat(t.pnl)||0);if(rb>peak)peak=rb;});
+  const curBal=cfg.balance+totalPnl;
+  const ddFP=peak>0?Math.max(0,(peak-curBal)/peak*100):0;
+  const ddFPa=Math.max(0,peak-curBal);
+  const sb={lo:[],mi:[],hi:[]};
+  closed.forEach(t=>{if(t.scoreTotal==null)return;const w=t.result==='WIN'?1:0;if(t.scoreTotal<40)sb.lo.push(w);else if(t.scoreTotal<60)sb.mi.push(w);else sb.hi.push(w);});
+  const wrS=k=>sb[k].length?sb[k].reduce((a,b)=>a+b,0)/sb[k].length*100:0;
+  const pF=closed.filter(t=>t.execPlan==='Sí, sin desviaciones').length;
+  const pD=closed.filter(t=>t.execPlan&&t.execPlan.startsWith('No')).length;
+  const cfT=closed.filter(t=>t.took&&t.took.startsWith('no-')&&t.cfResult&&t.cfResult!=='');
+  const cfMW=cfT.filter(t=>t.cfResult==='Hubiera ganado').length;
+  const exitCounts={};
+  closed.forEach(t=>{if(t.exitType){exitCounts[t.exitType]=(exitCounts[t.exitType]||0)+1;}});
+  // Psychology correlations
+  const psych={};
+  // Win rate by conviction level (group into low 1-4, mid 5-7, high 8-10)
+  const convGroups={low:[],mid:[],high:[]};
+  closed.forEach(t=>{if(t.conviccion==null)return;const w=t.result==='WIN'?1:0;if(t.conviccion<=4)convGroups.low.push(w);else if(t.conviccion<=7)convGroups.mid.push(w);else convGroups.high.push(w);});
+  psych.convWR={low:convGroups.low.length?convGroups.low.reduce((a,b)=>a+b,0)/convGroups.low.length*100:null,mid:convGroups.mid.length?convGroups.mid.reduce((a,b)=>a+b,0)/convGroups.mid.length*100:null,high:convGroups.high.length?convGroups.high.reduce((a,b)=>a+b,0)/convGroups.high.length*100:null};
+  psych.convCounts={low:convGroups.low.length,mid:convGroups.mid.length,high:convGroups.high.length};
+  // Pensamiento dominante breakdown
+  const pensStats={};
+  closed.forEach(t=>{if(!t.pensamiento)return;if(!pensStats[t.pensamiento])pensStats[t.pensamiento]={wins:0,total:0};pensStats[t.pensamiento].total++;if(t.result==='WIN')pensStats[t.pensamiento].wins++;});
+  psych.pensStats=pensStats;
+  // Racha previa vs resultado
+  const rachaStats={ganando:{wins:0,total:0},perdiendo:{wins:0,total:0},neutro:{wins:0,total:0}};
+  closed.forEach(t=>{if(!t.rachaPrevia||!rachaStats[t.rachaPrevia])return;rachaStats[t.rachaPrevia].total++;if(t.result==='WIN')rachaStats[t.rachaPrevia].wins++;});
+  psych.rachaStats=rachaStats;
+  // Proceso stats
+  const procesoStats={si:{wins:0,total:0},parcial:{wins:0,total:0},no:{wins:0,total:0}};
+  closed.forEach(t=>{if(!t.proceso||!procesoStats[t.proceso])return;procesoStats[t.proceso].total++;if(t.result==='WIN')procesoStats[t.proceso].wins++;});
+  psych.procesoStats=procesoStats;
+  // Avg presion wins vs losses
+  const presWins=closed.filter(t=>t.result==='WIN'&&t.presion!=null).map(t=>t.presion);
+  const presLoss=closed.filter(t=>t.result==='LOSS'&&t.presion!=null).map(t=>t.presion);
+  psych.avgPresWin=presWins.length?presWins.reduce((a,b)=>a+b,0)/presWins.length:null;
+  psych.avgPresLoss=presLoss.length?presLoss.reduce((a,b)=>a+b,0)/presLoss.length:null;
+
+  return{total,openCount,wins:wins.length,losses:losses.length,bes:bes.length,wr,lr,totalPnl,avgW,avgL,avgRRall,avgRRwins,evR,evUSD,sharpe,todayPnl,wkPnl,ddDayAmt,ddWkAmt,dayPnl,sC,pH,avgGap,gapsArr,ddFP,ddFPa,peak,wrS,pF,pD,cfT,cfMW,curBal,exitCounts,psych};
+}
+function getMonday(){const n=new Date();const d=n.getDay();const diff=n.getDate()-d+(d===0?-6:1);return new Date(n.setDate(diff)).toISOString().split('T')[0];}
+
+// ── RENDER OVERVIEW ──
+function renderOverview(){
+  const s=getStats();
+  const ac=document.getElementById('ddAlert');
+  if(s.ddFP>=cfg.ddW){ac.className='alert-c show';ac.innerHTML=`⚠ <strong>Drawdown desde peak histórico: ${s.ddFP.toFixed(2)}%.</strong> Superaste tu límite semanal. Considera pausar y revisar el plan.`;}
+  else ac.className='alert-c';
+  document.getElementById('kpi-grid').innerHTML=`
+    <div class="kpi"><div class="kpi-lbl">Balance inicial</div><div class="kpi-val">$${(cfg.balance||0).toLocaleString('en-US',{minimumFractionDigits:2})}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Balance actual</div><div class="kpi-val ${s.curBal>=cfg.balance?'pos':'neg'}">$${s.curBal.toLocaleString('en-US',{minimumFractionDigits:2})}</div></div>
+    <div class="kpi"><div class="kpi-lbl">P&L hoy</div><div class="kpi-val ${s.todayPnl>=0?'pos':'neg'}">${s.todayPnl>=0?'+':''}$${s.todayPnl.toFixed(2)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">P&L semana</div><div class="kpi-val ${s.wkPnl>=0?'pos':'neg'}">${s.wkPnl>=0?'+':''}$${s.wkPnl.toFixed(2)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">P&L total</div><div class="kpi-val ${s.totalPnl>=0?'pos':'neg'}">${s.totalPnl>=0?'+':''}$${s.totalPnl.toFixed(2)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Win rate</div><div class="kpi-val">${(s.wr*100).toFixed(1)}%</div><div class="kpi-sub">${s.wins}W · ${s.losses}L · ${s.bes}BE</div></div>
+    <div class="kpi"><div class="kpi-lbl">RR promedio real</div><div class="kpi-val ${s.avgRRall>=0?'pos':'neg'}">${s.avgRRall.toFixed(2)}R</div><div class="kpi-sub">Todos los trades</div></div>
+    <div class="kpi"><div class="kpi-lbl">RR promedio ganadores</div><div class="kpi-val pos">${s.avgRRwins.toFixed(2)}R</div><div class="kpi-sub">Solo WIN</div></div>
+    <div class="kpi"><div class="kpi-lbl">Expected value</div><div class="kpi-val ${s.evR>=0?'pos':'neg'}">${s.evR>=0?'+':''}${s.evR.toFixed(2)}R</div><div class="kpi-sub">${s.evR>=0?'+':''}$${s.evUSD.toFixed(2)} · (WR×RR)−(LR×1)</div></div>
+    <div class="kpi"><div class="kpi-lbl">Sharpe ratio</div><div class="kpi-val ${s.sharpe>=1?'pos':s.sharpe<0?'neg':''}">${s.total>=2?s.sharpe.toFixed(2):'—'}</div><div class="kpi-sub">${s.total>=2?(s.sharpe>=2?'Excelente':s.sharpe>=1?'Bueno':s.sharpe>=0?'Aceptable':'Negativo'):'Mín. 2 trades'}</div></div>
+  `;
+  document.getElementById('statslist').innerHTML=`
+    <div class="sr"><span class="sl2">Trades cerrados</span><span class="sv">${s.total}</span></div>
+    <div class="sr"><span class="sl2">Trades en curso</span><span class="sv" style="color:${s.openCount>0?'var(--am)':'inherit'}">${s.openCount}</span></div>
+    <div class="sr"><span class="sl2">Buy / Sell</span><span class="sv">${trades.filter(t=>t.dir==='Buy'&&t.status!=='open').length} / ${trades.filter(t=>t.dir==='Sell'&&t.status!=='open').length}</span></div>
+    <div class="sr"><span class="sl2">Promedio cuando gana</span><span class="sv" style="color:var(--gr)">+$${s.avgW.toFixed(2)}</span></div>
+    <div class="sr"><span class="sl2">Promedio cuando pierde</span><span class="sv" style="color:var(--rd)">$${s.avgL.toFixed(2)}</span></div>
+    <div class="sr"><span class="sl2">RR gap promedio</span><span class="sv" style="color:${s.avgGap>1?'var(--am)':'var(--gr)'}">${s.gapsArr.length?s.avgGap.toFixed(2)+'R dejado':'Sin datos MFE'}</span></div>
+  `;
+  // Exit stats
+  const ec=s.exitCounts;
+  const etTotal=Object.values(ec).reduce((a,b)=>a+b,0);
+  document.getElementById('exitstats').innerHTML=etTotal?Object.entries(ec).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="sr"><span class="sl2">${EXITLBL[k]||k}</span><span class="sv">${v} (${(v/etTotal*100).toFixed(0)}%)</span></div>`).join(''):
+    '<p style="font-size:12px;color:var(--tx3)">Sin datos de tipo de salida aún</p>';
+  document.getElementById('discstats').innerHTML=`
+    <div class="sr"><span class="sl2">Plan sin desviaciones</span><span class="sv">${s.pF}</span></div>
+    <div class="sr"><span class="sl2">Plan con improvisación</span><span class="sv" style="color:var(--rd)">${s.pD}</span></div>
+    <div class="sr"><span class="sl2">No tomados — con seguimiento</span><span class="sv">${s.cfT.length}</span></div>
+    <div class="sr"><span class="sl2">De esos, hubieran ganado</span><span class="sv" style="color:${s.cfMW>0?'var(--am)':'inherit'}">${s.cfMW}</span></div>
+  `;
+  // DD bars
+  const ddDpct=cfg.balance?s.ddDayAmt/cfg.balance*100:0;
+  const ddWpct=cfg.balance?s.ddWkAmt/cfg.balance*100:0;
+  const col=f=>f<60?'pg':f<85?'pa':'pr';
+  document.getElementById('ddDp').textContent=ddDpct.toFixed(2)+'%';
+  document.getElementById('ddWp').textContent=ddWpct.toFixed(2)+'%';
+  document.getElementById('ddPp').textContent=s.ddFP.toFixed(2)+'%';
+  document.getElementById('ddDu').textContent='$'+s.ddDayAmt.toFixed(2);
+  document.getElementById('ddWu').textContent='$'+s.ddWkAmt.toFixed(2);
+  document.getElementById('ddPu').textContent='$'+s.ddFPa.toFixed(2);
+  document.getElementById('ddPeak').textContent='$'+s.peak.toFixed(2);
+  document.getElementById('ddDl').textContent=cfg.ddD.toFixed(2);
+  document.getElementById('ddWl').textContent=cfg.ddW.toFixed(2);
+  const db=document.getElementById('ddDb');db.className='pf '+col(Math.min(100,ddDpct/cfg.ddD*100));db.style.width=Math.min(100,ddDpct/cfg.ddD*100)+'%';
+  const wb=document.getElementById('ddWb');wb.className='pf '+col(Math.min(100,ddWpct/cfg.ddW*100));wb.style.width=Math.min(100,ddWpct/cfg.ddW*100)+'%';
+  const pb=document.getElementById('ddPb');pb.className='pf '+col(Math.min(100,s.ddFP/cfg.ddW*100));pb.style.width=Math.min(100,s.ddFP/cfg.ddW*100)+'%';
+  // Day grid
+  ['Lun','Mar','Mié','Jue','Vie'].forEach((d,i)=>{
+    const v=s.dayPnl[i];const bg=v>0?'var(--grb)':v<0?'var(--rdb)':'var(--sur2)';const co=v>0?'var(--gr)':v<0?'var(--rd)':'var(--tx3)';
+    document.getElementById('daygrid').innerHTML=['Lun','Mar','Mié','Jue','Vie'].map((d,i)=>{const v=s.dayPnl[i];const bg=v>0?'var(--grb)':v<0?'var(--rdb)':'var(--sur2)';const co=v>0?'var(--gr)':v<0?'var(--rd)':'var(--tx3)';return`<div class="dc" style="background:${bg}"><div class="dn" style="color:${co}">${d}</div><div class="dv" style="color:${co}">${v===0?'—':(v>0?'+':'')+v.toFixed(0)}</div></div>`;}).join('');
+  });
+  document.getElementById('sessgrid').innerHTML=['New York','Asia','Londres','Session Overlap'].map(k=>`<div class="sc2"><div class="sn">${k}</div><div class="sv2">${s.sC[k]||0}</div></div>`).join('');
+  document.getElementById('peakhr').textContent=s.total?`Hora de entrada más frecuente: ${s.pH}`:'Sin datos aún';
+  document.getElementById('rrgaptxt').textContent=s.gapsArr.length?`Promedio: ${s.avgGap>=0?'+':''}${s.avgGap.toFixed(2)}R dejado sin capturar por trade`:'Sin datos de MFE / precio de cierre aún';
+  renderEq(s);renderRRG(s);renderSC(s);renderPsychOverview(s);
+}
+function renderEq(s){
+  const ctx=document.getElementById('eqC');if(eqI)eqI.destroy();
+  const sorted=[...trades].sort((a,b)=>(a.di||'')>(b.di||'')?1:-1);
+  let eq=[cfg.balance||0];sorted.forEach(t=>eq.push(eq[eq.length-1]+(parseFloat(t.pnl)||0)));
+  eqI=new Chart(ctx,{type:'line',data:{labels:['Inicio',...sorted.map((_,i)=>'#'+(i+1))],datasets:[{data:eq,borderColor:'#1DB87A',backgroundColor:'rgba(29,184,122,0.06)',borderWidth:2,pointRadius:eq.length<20?3:0,fill:true,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5C6480',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#5C6480',font:{size:9},callback:v=>'$'+v.toFixed(0)},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+}
+function renderRRG(s){
+  const ctx=document.getElementById('rrGapC');if(rrI)rrI.destroy();
+  const g=s.gapsArr.slice(-15).map(v=>+v.toFixed(2));if(!g.length)return;
+  rrI=new Chart(ctx,{type:'bar',data:{labels:g.map((_,i)=>'#'+(i+1)),datasets:[{data:g,backgroundColor:g.map(v=>v>0.5?'#E24B4A':v>0?'#F59E0B':'#1DB87A'),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{display:false},grid:{display:false}},y:{ticks:{color:'#5C6480',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+}
+function renderSC(s){
+  const ctx=document.getElementById('scoreC');if(scI)scI.destroy();
+  scI=new Chart(ctx,{type:'bar',data:{labels:['< 40','40-59','60-80'],datasets:[{data:[s.wrS('lo'),s.wrS('mi'),s.wrS('hi')],backgroundColor:'#1DB87A',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5C6480',font:{size:10}},grid:{display:false}},y:{max:100,ticks:{color:'#5C6480',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+}
+
+function renderPsychOverview(s){
+  const p=s.psych;
+  const noData='<p style="font-size:12px;color:var(--tx3)">Sin datos suficientes aún — registra más trades con psicología</p>';
+
+  // Conviction chart
+  const ctxC=document.getElementById('convC');
+  if(convI)convI.destroy();
+  const cData=[p.convWR.low,p.convWR.mid,p.convWR.high];
+  const cLabels=[`Baja 1-4\n(${p.convCounts.low} trades)`,`Media 5-7\n(${p.convCounts.mid} trades)`,`Alta 8-10\n(${p.convCounts.high} trades)`];
+  if(cData.some(v=>v!==null)){
+    convI=new Chart(ctxC,{type:'bar',data:{labels:cLabels,datasets:[{data:cData.map(v=>v??0),backgroundColor:['#E24B4A','#F59E0B','#1DB87A'],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5C6480',font:{size:9}},grid:{display:false}},y:{max:100,ticks:{color:'#5C6480',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+    // Insight
+    const best=p.convWR.high!==null?p.convWR.high:p.convWR.mid!==null?p.convWR.mid:null;
+    const worst=p.convWR.low!==null?p.convWR.low:null;
+    let insight='';
+    if(best!==null&&worst!==null) insight=`Alta convicción: ${best.toFixed(0)}% WR · Baja convicción: ${worst.toFixed(0)}% WR`;
+    else if(best!==null) insight=`Alta convicción: ${best.toFixed(0)}% WR — acumula más trades para comparar`;
+    document.getElementById('conv-insight').textContent=insight;
+  } else document.getElementById('conv-insight').textContent='Sin datos de convicción aún';
+
+  // Pensamiento dominante
+  const el=document.getElementById('pens-stats');
+  const ps=p.pensStats;
+  if(Object.keys(ps).length){
+    el.innerHTML=Object.entries(ps).sort((a,b)=>b[1].total-a[1].total).map(([k,v])=>{
+      const wr=v.total?v.wins/v.total*100:0;
+      const col=wr>=60?'var(--gr)':wr>=40?'var(--am)':'var(--rd)';
+      return `<div class="sr"><span class="sl2" style="font-size:11px">${PENS_LABELS[k]||k}</span><span class="sv" style="color:${col};font-size:12px">${wr.toFixed(0)}% WR (${v.total})</span></div>`;
+    }).join('');
+  } else el.innerHTML=noData;
+
+  // Racha previa
+  const rel=document.getElementById('racha-stats');
+  const rs=p.rachaStats;
+  const hasRacha=Object.values(rs).some(v=>v.total>0);
+  if(hasRacha){
+    rel.innerHTML=['ganando','neutro','perdiendo'].map(k=>{
+      const v=rs[k];
+      if(!v.total) return '';
+      const wr=v.wins/v.total*100;
+      const col=wr>=60?'var(--gr)':wr>=40?'var(--am)':'var(--rd)';
+      const lbl=k==='ganando'?'Venías ganando':k==='perdiendo'?'Venías perdiendo':'Neutro';
+      return `<div class="sr"><span class="sl2">${lbl}</span><span class="sv" style="color:${col}">${wr.toFixed(0)}% WR (${v.total} trades)</span></div>`;
+    }).join('');
+  } else rel.innerHTML=noData;
+
+  // Proceso + presión
+  const pel=document.getElementById('proceso-stats');
+  const proc=p.procesoStats;
+  const hasProc=Object.values(proc).some(v=>v.total>0);
+  let procHtml='';
+  if(hasProc){
+    procHtml=Object.entries(proc).map(([k,v])=>{
+      if(!v.total) return '';
+      const wr=v.wins/v.total*100;
+      const col=wr>=60?'var(--gr)':wr>=40?'var(--am)':'var(--rd)';
+      const lbl=PROCESO_LABELS[k]||k;
+      return `<div class="sr"><span class="sl2" style="font-size:11px">${lbl}</span><span class="sv" style="color:${col}">${wr.toFixed(0)}% WR (${v.total})</span></div>`;
+    }).join('');
+  }
+  if(p.avgPresWin!==null||p.avgPresLoss!==null){
+    procHtml+=`<div class="sr" style="margin-top:6px"><span class="sl2">Presión promedio — WIN</span><span class="sv" style="color:var(--gr)">${p.avgPresWin!==null?p.avgPresWin.toFixed(1):'—'}/5</span></div>`;
+    procHtml+=`<div class="sr"><span class="sl2">Presión promedio — LOSS</span><span class="sv" style="color:var(--rd)">${p.avgPresLoss!==null?p.avgPresLoss.toFixed(1):'—'}/5</span></div>`;
+  }
+  pel.innerHTML=procHtml||noData;
+}
+
+function renderList(){
+  const tbody=document.getElementById('tbody'),empty=document.getElementById('tempty');
+  document.getElementById('tcount').textContent=trades.length+' trade'+(trades.length!==1?'s':'')+' registrado'+(trades.length!==1?'s':'');
+  if(!trades.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML=[...trades].reverse().map((t,i)=>{
+    const ri=trades.length-1-i,p=parseFloat(t.pnl)||0;
+    const isOpen=t.status==='open';
+    const bc=isOpen?'badge-open':t.result==='WIN'?'bw2':t.result==='LOSS'?'bl2b':'bb2';
+    const gap=(t.mfeRR!=null&&t.rrFinal!=null)?(t.mfeRR-t.rrFinal).toFixed(2):'—';
+    const sc=t.scoreTotal;
+    const scCol=sc>=60?'var(--gr)':sc>=40?'var(--am)':'var(--rd)';
+    const exitLbl=t.exitType?EXITLBL[t.exitType]||t.exitType:'—';
+    return `<tr style="${isOpen?'opacity:.75':''}">
+      <td style="color:var(--tx3)">${ri+1}</td>
+      <td>${t.di||'—'}</td>
+      <td style="font-weight:600;color:${t.dir==='Buy'?'var(--gr)':'var(--bl)'}">${t.dir||'—'}</td>
+      <td style="font-weight:600;color:${sc!=null?scCol:'var(--tx3)'}">${sc!=null?sc+'/80':'—'}</td>
+      <td>${t.rrPlan!=null?t.rrPlan.toFixed(2):'—'}</td>
+      <td style="color:${t.rrFinal!=null?(t.rrFinal>=0?'var(--gr)':'var(--rd)'):'inherit'}">${t.rrFinal!=null?t.rrFinal.toFixed(2):'—'}</td>
+      <td style="color:${gap!=='—'&&parseFloat(gap)>0.5?'var(--am)':'var(--gr)'}">${gap}</td>
+      <td style="font-weight:500;color:${isOpen?'var(--am)':p>=0?'var(--gr)':'var(--rd)'}">${isOpen?'En curso':((p>=0?'+':'')+'$'+p.toFixed(2))}</td>
+      <td><span class="${bc}">${isOpen?'⏳ EN CURSO':t.result||'—'}</span></td>
+      <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis">${isOpen?'—':exitLbl}</td>
+      <td style="font-size:11px">${t.session||'—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-sm" style="padding:3px 8px;font-size:11px;margin-right:4px" onclick="openDetail(${ri})">👁 Ver</button>
+        <button class="btn-sm" style="padding:3px 8px;font-size:11px${isOpen?';color:var(--am);border-color:var(--am)':''}" onclick="openEdit(${ri})">${isOpen?'✏ Completar':'✏'}</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── DETAIL MODAL ──
+function openDetail(idx){
+  const t=trades[idx];if(!t)return;
+  document.getElementById('dm-title').textContent=`Trade #${idx+1} · ${t.di||''} · ${t.dir||''}`;
+  document.getElementById('dm-edit').onclick=()=>{closeDetail();openEdit(idx);};
+  document.getElementById('dm-del').onclick=()=>{if(confirm('¿Eliminar este trade?')){closeDetail();delTrade(idx);}};
+  const p=parseFloat(t.pnl)||0;
+  const lvLbl={s:'Fuerte — 20 pts',w:'Débil — 10 pts',n:'No cumple — 0 pts'};
+  const lvCol={s:'background:var(--grb);color:var(--gr)',w:'background:var(--amb);color:var(--am)',n:'background:var(--rdb);color:var(--rd)'};
+  const sc=t.scoreTotal;
+  const scCol=sc>=60?'var(--gr)':sc>=40?'var(--am)':'var(--rd)';
+  const fmtTook=v=>{const m={'si-criterios':'✓ Cumplía todos los criterios','si-fomo':'⚡ FOMO','si-revanche':'↺ Revanchismo','no-no-vi':'No la vi','no-dude':'Dudé','no-confirmacion':'Esperaba más confirmación','no-sesgo':'Sesgo contrario'};return m[v]||v||'—';};
+  let html=`
+  <div class="dsec">
+    <div class="dtt">Resumen</div>
+    <div class="drow"><span class="dl">Fecha entrada / salida</span><span class="dv2">${t.di||'—'} ${t.ti||''} → ${t.do_||'—'}</span></div>
+    <div class="drow"><span class="dl">Dirección</span><span class="dv2" style="font-weight:700;color:${t.dir==='Buy'?'var(--gr)':'var(--bl)'}">${t.dir||'—'}</span></div>
+    <div class="drow"><span class="dl">Lotaje</span><span class="dv2">${t.lot||'—'}</span></div>
+    <div class="drow"><span class="dl">Sesión</span><span class="dv2">${t.session||'—'}</span></div>
+    <div class="drow"><span class="dl">Resultado</span><span class="dv2"><span class="dpill" style="background:${t.result==='WIN'?'var(--grb)':t.result==='LOSS'?'var(--rdb)':'var(--blb)'};color:${t.result==='WIN'?'var(--gr)':t.result==='LOSS'?'var(--rd)':'var(--bl)'}">${t.result||'—'}</span></span></div>
+    <div class="drow"><span class="dl">P&L real</span><span class="dv2" style="color:${p>=0?'var(--gr)':'var(--rd)'};font-weight:700;font-size:16px">${p>=0?'+':''}$${p.toFixed(2)}</span></div>
+    <div class="drow"><span class="dl">Tipo de salida</span><span class="dv2">${t.exitType?EXITLBL[t.exitType]||t.exitType:'—'}</span></div>
+  </div>
+  <div class="dsec">
+    <div class="dtt">Precios & RR calculados</div>
+    <div class="drow"><span class="dl">Entrada / SL / TP</span><span class="dv2">${t.pentry||'—'} / ${t.psl||'—'} / ${t.ptp||'—'}</span></div>
+    <div class="drow"><span class="dl">MFE precio / MAE precio</span><span class="dv2">${t.pmfe||'—'} / ${t.pmae||'—'}</span></div>
+    <div class="drow"><span class="dl">Precio cierre</span><span class="dv2">${t.pclose||'—'}</span></div>
+    <div class="drow"><span class="dl">R:R planeado / final</span><span class="dv2">${t.rrPlan!=null?t.rrPlan.toFixed(2):'—'} / <span style="color:${t.rrFinal>=0?'var(--gr)':'var(--rd)'};font-weight:700">${t.rrFinal!=null?t.rrFinal.toFixed(2):'—'}</span></span></div>
+    <div class="drow"><span class="dl">MFE en R / MAE en R</span><span class="dv2">${t.mfeRR!=null?t.mfeRR.toFixed(2)+'R':'—'} / ${t.maeRR!=null?t.maeRR.toFixed(2)+'R':'—'}</span></div>
+    <div class="drow"><span class="dl">RR dejado en la mesa</span><span class="dv2" style="color:${t.mfeRR!=null&&t.rrFinal!=null&&(t.mfeRR-t.rrFinal)>0.5?'var(--am)':'var(--gr)'}">${t.mfeRR!=null&&t.rrFinal!=null?(t.mfeRR-t.rrFinal).toFixed(2)+'R':'—'}</span></div>
+  </div>
+  <div class="dsec">
+    <div class="dtt">Score del setup — ${sc!=null?sc+'/80':'no registrado'}</div>`;
+  if(t.blv){[1,2,3,4].forEach(i=>{const lv=t.blv[i];if(lv)html+=`<div class="sdr"><span class="sdrl">${BLBL[i]}</span><span class="sdrp" style="${lvCol[lv]||''}">${lvLbl[lv]||lv}</span><span class="sdrv" style="color:${lv==='s'?'var(--gr)':lv==='w'?'var(--am)':'var(--rd)'}">${lv==='s'?20:lv==='w'?10:0}</span></div>`;});
+    if(sc!=null)html+=`<div style="margin-top:8px;background:var(--sur2);border-radius:var(--ra);padding:8px 12px;display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--tx3)">Score total</span><span style="font-size:20px;font-weight:700;color:${scCol}">${sc}/80</span></div>`;
+  } else html+=`<p style="font-size:12px;color:var(--tx3)">Score no disponible.</p>`;
+  html+=`</div>
+  <div class="dsec">
+    <div class="dtt">Estado del día</div>
+    <div class="drow"><span class="dl">Estado emocional</span><span class="dv2">${t.emotion||'—'}</span></div>
+    <div class="drow"><span class="dl">Dormiste bien / Revisaste el plan</span><span class="dv2">${t.slept||'—'} / ${t.rplan||'—'}</span></div>
+    <div class="drow"><span class="dl">Bias del día</span><span class="dv2">${t.bias||'—'}</span></div>
+    <div class="drow"><span class="dl">Noticias alto impacto</span><span class="dv2">${t.news||'—'}</span></div>
+  </div>
+  <div class="dsec">
+    <div class="dtt">Tipo de salida</div>
+    <div class="drow"><span class="dl">¿Por qué cerraste aquí?</span><span class="dv2">${t.exitType?EXITLBL[t.exitType]||t.exitType:'No registrado'}</span></div>
+  </div>
+  <div class="dsec">
+    <div class="dtt">Anti-FOMO & disciplina</div>
+    <div class="drow"><span class="dl">¿Lo tomé?</span><span class="dv2">${fmtTook(t.took)}</span></div>`;
+  if(t.took&&t.took.startsWith('no-'))html+=`<div class="drow"><span class="dl">Contrafactual</span><span class="dv2">${t.cfResult||'—'}</span></div><div class="drow"><span class="dl">RR hipotético</span><span class="dv2">${t.cfRR||'—'}</span></div>`;
+  html+=`<div class="drow"><span class="dl">Ejecución del plan</span><span class="dv2">${t.execPlan||'—'}</span></div>`;
+  if(t.execNote)html+=`<div class="drow"><span class="dl">Detalle improvisación</span><span class="dv2" style="color:var(--am)">${t.execNote}</span></div>`;
+  html+=`</div>`;
+  // Psychology section
+  const convLabel=t.conviccion!=null?`${t.conviccion}/10 — ${t.conviccion<=4?'Baja':t.conviccion<=7?'Media':'Alta'}`:'—';
+  const presLabel=t.presion!=null?`${t.presion}/5 — ${t.presion<=2?'Sin presión':t.presion<=3?'Moderada':'Alta'}`:'—';
+  html+=`<div class="dsec">
+    <div class="dtt">Psicología pre-trade</div>
+    <div class="drow"><span class="dl">Racha previa</span><span class="dv2" style="color:${t.rachaPrevia==='ganando'?'var(--gr)':t.rachaPrevia==='perdiendo'?'var(--rd)':'var(--tx2)'}">${t.rachaPrevia||'—'}</span></div>
+    <div class="drow"><span class="dl">Nivel de convicción</span><span class="dv2">${convLabel}</span></div>
+    <div class="drow"><span class="dl">Pensamiento dominante</span><span class="dv2" style="font-size:11px">${PENS_LABELS[t.pensamiento]||t.pensamiento||'—'}</span></div>
+  </div>
+  <div class="dsec">
+    <div class="dtt">Psicología post-trade</div>
+    <div class="drow"><span class="dl">Estado al cerrar</span><span class="dv2" style="font-size:11px">${POSTEMO_LABELS[t.postEmo]||t.postEmo||'—'}</span></div>
+    <div class="drow"><span class="dl">¿Respetaste el proceso?</span><span class="dv2" style="color:${t.proceso==='si'?'var(--gr)':t.proceso==='no'?'var(--rd)':'var(--am)'};font-size:11px">${PROCESO_LABELS[t.proceso]||t.proceso||'—'}</span></div>
+    ${t.desviacion?`<div class="drow"><span class="dl">Desviación</span><span class="dv2" style="color:var(--am);font-size:11px">${DESV_LABELS[t.desviacion]||t.desviacion}</span></div>`:''}
+    <div class="drow"><span class="dl">Presión sentida</span><span class="dv2">${presLabel}</span></div>
+  </div>`;
+  if(t.screenshot)html+=`<div class="dsec"><div class="dtt">Screenshot</div><div class="lb2"><a href="${t.screenshot}" target="_blank" rel="noopener">🔗 ${t.screenshot}</a></div></div>`;
+  if(t.notesOpen||t.notes||t.notesClose){
+    html+=`<div class="dsec"><div class="dtt">Notas</div>`;
+    if(t.notesOpen)html+=`<p style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Apertura</p><div class="nb2">${t.notesOpen}</div>`;
+    if(t.notes)html+=`<p style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Trade</p><div class="nb2">${t.notes}</div>`;
+    if(t.notesClose)html+=`<p style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Cierre</p><div class="nb2">${t.notesClose}</div>`;
+    html+=`</div>`;
+  }
+  document.getElementById('dm-body').innerHTML=html;
+  document.getElementById('detailmodal').style.display='flex';
+}
+function closeDetail(){document.getElementById('detailmodal').style.display='none';}
+
+// ── EDIT MODAL ──
+function openEdit(idx){
+  editIdx=idx;const t=trades[idx];if(!t)return;
+  document.getElementById('edit-body').innerHTML=`
+    <div class="fr"><div class="fi"><label>Dirección</label><select id="e-dir"><option ${t.dir==='Buy'?'selected':''}>Buy</option><option ${t.dir==='Sell'?'selected':''}>Sell</option></select></div><div class="fi"><label>Lotaje</label><input type="number" id="e-lot" value="${t.lot||''}" step="0.01"></div></div>
+    <div class="fr"><div class="fi"><label>Fecha entrada</label><input type="date" id="e-di" value="${t.di||''}"></div><div class="fi"><label>Hora entrada</label><input type="time" id="e-ti" value="${t.ti||''}"></div></div>
+    <div class="fi" style="margin-bottom:10px"><label>Fecha salida</label><input type="date" id="e-do" value="${t.do_||''}"></div>
+    <div class="fr3"><div class="fi"><label>Entrada</label><input type="number" id="e-pentry" step="0.00001" value="${t.pentry||''}"></div><div class="fi"><label>SL</label><input type="number" id="e-psl" step="0.00001" value="${t.psl||''}"></div><div class="fi"><label>TP</label><input type="number" id="e-ptp" step="0.00001" value="${t.ptp||''}"></div></div>
+    <div class="fr"><div class="fi"><label>MFE precio</label><input type="number" id="e-pmfe" step="0.00001" value="${t.pmfe||''}"></div><div class="fi"><label>MAE precio</label><input type="number" id="e-pmae" step="0.00001" value="${t.pmae||''}"></div></div>
+    <div class="fi" style="margin-bottom:10px"><label>Precio cierre</label><input type="number" id="e-pclose" step="0.00001" value="${t.pclose||''}"></div>
+    <div class="fi" style="margin-bottom:10px"><label>P&L real ($)</label><input type="number" id="e-pnl" step="0.01" value="${t.pnl||''}"></div>
+    <div class="fi" style="margin-bottom:10px"><label>Resultado</label><select id="e-result"><option ${t.result==='WIN'?'selected':''} value="WIN">Win</option><option ${t.result==='LOSS'?'selected':''} value="LOSS">Loss</option><option ${t.result==='BE'?'selected':''} value="BE">Breakeven</option></select></div>
+    <div class="fi" style="margin-bottom:10px"><label>Link screenshot</label><input type="url" id="e-ss" value="${t.screenshot||''}"></div>
+    <div class="fi" style="margin-bottom:10px"><label>Notas trade</label><textarea id="e-notes" style="min-height:60px">${t.notes||''}</textarea></div>
+    <div class="fi" style="margin-bottom:10px"><label>Notas cierre</label><textarea id="e-nc" style="min-height:60px">${t.notesClose||''}</textarea></div>
+    <div class="fg" style="margin-bottom:10px"><label>Estado al cerrar (post-trade)</label>
+      <select id="e-postemo">
+        <option value="">—</option>
+        <option value="satisfaccion" ${t.postEmo==='satisfaccion'?'selected':''}>😌 Satisfacción</option>
+        <option value="alivio" ${t.postEmo==='alivio'?'selected':''}>😮‍💨 Alivio</option>
+        <option value="frustracion" ${t.postEmo==='frustracion'?'selected':''}>😤 Frustración</option>
+        <option value="euforia" ${t.postEmo==='euforia'?'selected':''}>🤩 Euforia</option>
+        <option value="indiferencia" ${t.postEmo==='indiferencia'?'selected':''}>😐 Indiferencia</option>
+      </select>
+    </div>
+    <div class="fg" style="margin-bottom:10px"><label>¿Respetaste el proceso?</label>
+      <select id="e-proceso">
+        <option value="">—</option>
+        <option value="si" ${t.proceso==='si'?'selected':''}>✅ Sí completamente</option>
+        <option value="parcial" ${t.proceso==='parcial'?'selected':''}>⚠️ Parcialmente</option>
+        <option value="no" ${t.proceso==='no'?'selected':''}>❌ No — fuera del plan</option>
+      </select>
+    </div>
+    <div class="fg" style="margin-bottom:14px"><label>Estado del trade</label><select id="e-status"><option value="complete" ${(t.status||'complete')==='complete'?'selected':''}>✅ Cerrado / Completo</option><option value="open" ${t.status==='open'?'selected':''}>⏳ En curso</option></select></div>
+  `;
+  document.getElementById('editmodal').style.display='flex';
+}
+function closeEdit(){document.getElementById('editmodal').style.display='none';editIdx=null;}
+function saveEdit(){
+  if(editIdx===null)return;
+  const t=trades[editIdx];
+  const dir=document.getElementById('e-dir').value;
+  const entry=parseFloat(document.getElementById('e-pentry').value)||null;
+  const sl=parseFloat(document.getElementById('e-psl').value)||null;
+  const tp=parseFloat(document.getElementById('e-ptp').value)||null;
+  const mfe=parseFloat(document.getElementById('e-pmfe').value)||null;
+  const mae=parseFloat(document.getElementById('e-pmae').value)||null;
+  const close=parseFloat(document.getElementById('e-pclose').value)||null;
+  const dm=dir==='Buy'?1:-1;
+  const rd=(entry&&sl)?Math.abs(entry-sl):null;
+  t.dir=dir;t.lot=document.getElementById('e-lot').value;
+  t.di=document.getElementById('e-di').value;t.ti=document.getElementById('e-ti').value;
+  t.do_=document.getElementById('e-do').value;
+  t.pentry=entry;t.psl=sl;t.ptp=tp;t.pmfe=mfe;t.pmae=mae;t.pclose=close;
+  t.rrPlan=(entry&&sl&&tp&&rd)?Math.abs(tp-entry)/rd:null;
+  t.rrFinal=(entry&&sl&&close&&rd)?((close-entry)*dm)/rd:null;
+  t.mfeRR=(entry&&sl&&mfe&&rd)?((mfe-entry)*dm)/rd:null;
+  t.maeRR=(entry&&sl&&mae&&rd)?((mae-entry)*dm)/rd:null;
+  t.session=getSess(t.ti);
+  t.status=document.getElementById('e-status').value;
+  t.postEmo=document.getElementById('e-postemo').value||t.postEmo;
+  t.proceso=document.getElementById('e-proceso').value||t.proceso;
+  t.pnl=document.getElementById('e-pnl').value;
+  t.result=document.getElementById('e-result').value;
+  t.screenshot=document.getElementById('e-ss').value;
+  t.notes=document.getElementById('e-notes').value;
+  t.notesClose=document.getElementById('e-nc').value;
+  persist();closeEdit();renderAll();showMsg('Trade actualizado.','ok');
+}
+function delTrade(idx){trades.splice(idx,1);persist();renderAll();}
+
+// ── EMO / GESTION / RES ──
+function selEmo(btn,name){
+  document.querySelectorAll('.eb').forEach(b=>b.classList.remove('esel'));
+  btn.classList.add('esel');curEmo=name;
+  const box=document.getElementById('etip');box.textContent='⚡ '+({ENFOCADO:'Estado óptimo — ejecuta el plan sin improvisar.',NEUTRO:'Aceptable — sé selectivo con los setups hoy.',ANSIOSO:'Reduce el tamaño de la posición al 50% hoy.',FRUSTRADO:'Considera no operar hoy. Preserva el capital.',CANSADO:'Fatiga afecta el juicio — solo setups A+, sin forzar.'}[name]||'');box.style.display='block';
+}
+function buildGestion(){} // kept for compatibility — block removed
+function setRes(val,btn){
+  curRes=val;
+  ['rwin','rloss','rbe'].forEach(id=>document.getElementById(id).className='rb');
+  if(val==='WIN')document.getElementById('rwin').className='rb sw3';
+  if(val==='LOSS')document.getElementById('rloss').className='rb sl3';
+  if(val==='BE')document.getElementById('rbe').className='rb sb3';
+}
+
+// ── PSYCHOLOGY FUNCTIONS ──
+function setConv(val,btn){
+  curConv=val;
+  document.querySelectorAll('#conv-grid .conv-btn').forEach(b=>b.className='conv-btn');
+  const cls=val>=8?'csel-hi':val>=5?'csel-mid':'csel-lo';
+  btn.className='conv-btn '+cls;
+}
+function setPens(val,btn){
+  curPens=val;
+  document.querySelectorAll('#pens-grid .psy-btn').forEach(b=>b.className='psy-btn');
+  const good=['ejecucion','duda-setup'];
+  const bad=['revanche','fomo','presion-inactivo'];
+  btn.className='psy-btn '+(good.includes(val)?'psel':bad.includes(val)?'psel-b':'psel-w');
+}
+function setPostEmo(val,btn){
+  curPostEmo=val;
+  document.querySelectorAll('#post-emo-grid .psy-btn').forEach(b=>b.className='psy-btn');
+  const good=['satisfaccion','indiferencia'];
+  const bad=['frustracion'];
+  btn.className='psy-btn '+(good.includes(val)?'psel':bad.includes(val)?'psel-b':'psel-w');
+}
+function setProceso(val,btn){
+  curProceso=val;
+  document.querySelectorAll('#proceso-grid .psy-btn').forEach(b=>b.className='psy-btn');
+  btn.className='psy-btn '+(val==='si'?'psel':val==='no'?'psel-b':'psel-w');
+  document.getElementById('desviacion-wrap').style.display=(val==='parcial'||val==='no')?'block':'none';
+  if(val==='si') curDesv=null;
+}
+function setDesv(val,btn){
+  curDesv=val;
+  document.querySelectorAll('#desv-grid .psy-btn').forEach(b=>b.className='psy-btn');
+  btn.className='psy-btn psel-w';
+}
+function setPresion(val,btn){
+  curPresion=val;
+  document.querySelectorAll('#presion-grid .conv-btn').forEach(b=>b.className='conv-btn');
+  const cls=val<=2?'csel-hi':val<=3?'csel-mid':'csel-lo';
+  btn.className='conv-btn '+cls;
+}
+
+// ── SAVE TRADE ──
+function saveTrade(mode='complete'){
+  if(!cfg.balance){showMsg('Configura el balance primero.');return;}
+  const dir=document.getElementById('tdir').value,di=document.getElementById('tdi').value;
+  if(!dir||!di){showMsg('Completa al menos: dirección y fecha de entrada.');return;}
+  if(mode==='complete'&&!curRes){showMsg('Selecciona el resultado del trade (Win / Loss / BE).');return;}
+  const gOpt=-1; // gestion block removed
+  const entry=parseFloat(document.getElementById('pentry').value)||null;
+  const sl=parseFloat(document.getElementById('psl').value)||null;
+  const tp=parseFloat(document.getElementById('ptp').value)||null;
+  const mfe=parseFloat(document.getElementById('pmfe').value)||null;
+  const mae=parseFloat(document.getElementById('pmae').value)||null;
+  const close=parseFloat(document.getElementById('pclose').value)||null;
+  const time=document.getElementById('tti').value;
+  const lot=parseFloat(document.getElementById('tlot').value)||0;
+  const dm=dir==='Buy'?1:-1;
+  const rd=(entry&&sl)?Math.abs(entry-sl):null;
+  const hasN=Object.values(blv).some(v=>v==='n');
+  const scoreTotal=Object.values(blv).some(v=>v!==null)?(hasN?0:Object.values(blv).reduce((s,v)=>s+(v?{s:20,w:10,n:0}[v]:0),0)):null;
+  trades.push({
+    id:Date.now(),status:mode,dir,lot:document.getElementById('tlot').value,
+    di,ti:time,do_:document.getElementById('tdo').value,
+    pentry:entry,psl:sl,ptp:tp,pmfe:mfe,pmae:mae,pclose:close,
+    rrPlan:(entry&&sl&&tp&&rd)?Math.abs(tp-entry)/rd:null,
+    rrFinal:(entry&&sl&&close&&rd)?((close-entry)*dm)/rd:null,
+    mfeRR:(entry&&sl&&mfe&&rd)?((mfe-entry)*dm)/rd:null,
+    maeRR:(entry&&sl&&mae&&rd)?((mae-entry)*dm)/rd:null,
+    session:getSess(time),scoreTotal,blv:{...blv},
+    pnl:document.getElementById('tpnl').value,result:curRes,
+    exitType:curExit,
+    took:document.getElementById('ttook').value,
+    cfResult:document.getElementById('cf-result').value,
+    cfRR:document.getElementById('cf-rr').value,
+    execPlan:document.getElementById('exec-plan').value,
+    execNote:document.getElementById('exec-note').value,
+    // Psychology
+    conviccion:curConv,
+    pensamiento:curPens,
+    rachaPrevia:getStreakInfo().type,
+    postEmo:curPostEmo,
+    proceso:curProceso,
+    desviacion:curDesv,
+    presion:curPresion,
+    screenshot:document.getElementById('tss').value,
+    notes:document.getElementById('tnotes').value,
+    notesClose:document.getElementById('tnc').value,
+    emotion:curEmo,slept:document.getElementById('slept').value,
+    rplan:document.getElementById('rplan').value,
+    bias:document.getElementById('bias').value,
+    news:document.getElementById('news').value,
+    notesOpen:document.getElementById('nopen').value
+  });
+  persist();
+  showMsg(mode==='open'?'Trade en curso guardado — complétalo cuando cierre.':'Trade guardado correctamente.','ok');
+  resetForm();renderAll();
+}
+function showMsg(msg,type='err'){
+  const a=document.getElementById('savemsg');a.textContent=msg;a.style.display='block';
+  a.style.background=type==='ok'?'var(--grb)':'var(--amb)';
+  a.style.border='1px solid '+(type==='ok'?'var(--gr)':'var(--am)');
+  a.style.color=type==='ok'?'var(--gr)':'var(--am)';
+  setTimeout(()=>a.style.display='none',3000);
+}
+function resetForm(){
+  ['tdir','tlot','tdi','tti','tdo','pentry','psl','ptp','pmfe','pmae','pclose','tpnl','tss','tnotes','tnc','slept','rplan','bias','news','nopen','ttook','cf-result','cf-rr','exec-plan','exec-note'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  curRes=null;curEmo='';curExit=null;
+  curConv=null;curPens=null;curPostEmo=null;curProceso=null;curDesv=null;curPresion=null;
+  blv={1:null,2:null,3:null,4:null};
+  ['rwin','rloss','rbe'].forEach(id=>document.getElementById(id).className='rb');
+  document.querySelectorAll('.eb').forEach(b=>b.classList.remove('esel'));
+  document.querySelectorAll('.lb').forEach(b=>b.className='lb');
+  document.querySelectorAll('.et-btn').forEach(b=>b.className='et-btn');
+  document.querySelectorAll('#conv-grid .conv-btn').forEach(b=>b.className='conv-btn');
+  document.querySelectorAll('#presion-grid .conv-btn').forEach(b=>b.className='conv-btn');
+  document.querySelectorAll('.psy-btn').forEach(b=>b.className='psy-btn');
+  const dw=document.getElementById('desviacion-wrap');if(dw)dw.style.display='none';
+  document.getElementById('etip').style.display='none';
+  document.getElementById('cfbox').style.display='none';
+  document.getElementById('exec-note-wrap').style.display='none';
+  ['out-rrplan','out-rrfinal','out-mfe','out-mae','out-rrgap','out-pnl','out-comm','out-net','out-session'].forEach(id=>document.getElementById(id).textContent='—');
+  ['bs1','bs2','bs3','bs4'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent='— pts';e.className='bsc';}});
+  document.getElementById('sd-big').textContent='—';
+  document.getElementById('sd-big').className='sd-big';
+  document.getElementById('sd-bar').style.width='0%';
+  document.getElementById('sd-lbl').textContent='Completa el checklist para obtener el score del setup';
+  for(let i=1;i<=4;i++){document.getElementById('bn'+i).className=i===1?'bnum':'bnum lk';}
+  for(let i=2;i<=4;i++)lockB(i);lockB('reg');lockB(5);
+  setToday();
+}
+
+// ── CALCULADORA ──
+function calcRef(){
+  const bal=parseFloat(document.getElementById('cbal').value)||cfg.balance||0;
+  const risk=parseFloat(document.getElementById('crisk').value)||0.4;
+  const rAmt=bal*risk/100;
+  const SLS=[5,7,10,12,15,17,20,25,30,35,40,50];
+  document.getElementById('reftbody').innerHTML=SLS.map(sl=>{
+    const lots=rAmt/(sl*10);
+    const rounded=Math.floor(lots*100)/100;
+    const comm=4*rounded;
+    const totalRisk=rAmt+comm;
+    const totalPct=cfg.balance?totalRisk/cfg.balance*100:0;
+    return `<tr><td>${sl}</td><td>$${rAmt.toFixed(2)}</td><td>${lots.toFixed(4)}</td><td>${rounded.toFixed(2)}</td><td style="color:var(--am)">+$${comm.toFixed(2)}</td><td style="color:var(--rd);font-weight:600">$${totalRisk.toFixed(2)}</td><td style="color:var(--tx3);font-size:11px">${totalPct.toFixed(3)}%</td></tr>`;
+  }).join('');
+}
+function calcCustom(){
+  const bal=parseFloat(document.getElementById('cbal').value)||cfg.balance||0;
+  const sl=parseFloat(document.getElementById('csl').value);
+  const risk=parseFloat(document.getElementById('crisk2').value)||cfg.risk||0.4;
+  const out=document.getElementById('customout');
+  if(!sl||!bal){out.innerHTML='<span style="color:var(--tx3)">Ingresa el SL para calcular</span>';return;}
+  const rAmt=bal*risk/100;
+  const lots=rAmt/(sl*10);
+  const rounded=Math.floor(lots*100)/100;
+  const comm=4*rounded;
+  const totalRisk=rAmt+comm;
+  const totalPct=bal?totalRisk/bal*100:0;
+  out.innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotaje exacto</div><div style="font-size:24px;font-weight:600;color:var(--gr)">${lots.toFixed(4)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotes redondeados (↓)</div><div style="font-size:24px;font-weight:600;color:var(--tx)">${rounded.toFixed(2)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">$ riesgo (si SL toca)</div><div style="font-size:24px;font-weight:600;color:var(--am)">$${rAmt.toFixed(2)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Comisión adicional</div><div style="font-size:24px;font-weight:600;color:var(--am)">+$${comm.toFixed(2)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Costo total si pierdo</div><div style="font-size:24px;font-weight:600;color:var(--rd)">$${totalRisk.toFixed(2)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% real sobre cuenta</div><div style="font-size:24px;font-weight:600;color:var(--tx3)">${totalPct.toFixed(3)}%</div></div>
+  </div>`;
+}
+
+// ── BACKUP / RESTORE ──
+function exportJSON(){
+  const data={cfg,trades,version:7,asset:'EURUSD',exportedAt:new Date().toISOString()};
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download='eurusd_journal_backup_'+new Date().toISOString().split('T')[0]+'.json';
+  a.click();
+}
+function importJSON(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(data.cfg)cfg=data.cfg;
+      if(data.trades)trades=data.trades;
+      persist();renderAll();
+      alert('✓ Datos restaurados. '+trades.length+' trades cargados.');
+    }catch(err){alert('Error al leer el archivo. Verifica que sea un backup válido.');}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+function exportCSV(){
+  if(!trades.length){alert('No hay trades para exportar.');return;}
+  const h=['#','Fecha','Hora','Salida','Estado','Dir','Lotes','Entrada','SL','TP','MFE','MAE','Cierre','RR plan','RR final','MFE R','MAE R','RR gap','Score','PnL','Resultado','Sesión','Tipo salida','Emoción','Bias','Noticias','Took','CF','CF_RR','ExecPlan','Screenshot','Notas','NotasCierre'];
+  const rows=trades.map((t,i)=>{
+    const gap=t.mfeRR!=null&&t.rrFinal!=null?(t.mfeRR-t.rrFinal).toFixed(3):'';
+    return[i+1,t.di,t.ti,t.do_,t.status==='open'?'EN CURSO':'CERRADO',t.dir,t.lot,t.pentry,t.psl,t.ptp,t.pmfe,t.pmae,t.pclose,
+      t.rrPlan!=null?t.rrPlan.toFixed(3):'',t.rrFinal!=null?t.rrFinal.toFixed(3):'',
+      t.mfeRR!=null?t.mfeRR.toFixed(3):'',t.maeRR!=null?t.maeRR.toFixed(3):'',gap,
+      t.scoreTotal||'',t.pnl,t.result||'',t.session,t.exitType||'',t.emotion,t.bias,t.news,
+      t.took,t.cfResult,t.cfRR,t.execPlan,(t.screenshot||''),
+      (t.notes||'').replace(/[,\n]/g,' '),(t.notesClose||'').replace(/[,\n]/g,' ')];
+  });
+  const csv=[h,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='eurusd_journal.csv';a.click();
+}
+
+// ── ANÁLISIS PSICOLÓGICO ──
+let aC1I=null,aC2I=null,aC3I=null,aC4I=null,aC5I=null,aC6I=null;
+
+function renderAnalisis(){
+  const closed=trades.filter(t=>t.status!=='open');
+  const psychTrades=closed.filter(t=>t.conviccion!=null||t.pensamiento!=null||t.proceso!=null);
+  const MIN=5;
+  document.getElementById('analisis-empty').style.display=psychTrades.length<MIN?'block':'none';
+  document.getElementById('analisis-content').style.display=psychTrades.length<MIN?'none':'block';
+  if(psychTrades.length<MIN)return;
+
+  const rp=cfg.balance*cfg.risk/100; // risk per trade in $
+
+  // ── HELPER ──
+  function wrPnl(arr){
+    if(!arr.length)return{wr:null,avgPnl:null,n:0};
+    const w=arr.filter(t=>t.result==='WIN').length;
+    const pnls=arr.map(t=>parseFloat(t.pnl)||0);
+    return{wr:w/arr.length*100,avgPnl:pnls.reduce((a,b)=>a+b,0)/pnls.length,n:arr.length};
+  }
+  function sigLabel(wr,n){
+    if(n<5)return'⬜ Pocos datos';
+    if(wr>=70)return'🟢 Fortaleza';
+    if(wr>=50)return'🟡 Atención';
+    return'🔴 Crítico';
+  }
+
+  // ── 1. CONVICCIÓN 1-10 ──
+  const convBuckets=Array.from({length:10},(_,i)=>closed.filter(t=>t.conviccion===i+1));
+  const convWR=convBuckets.map(b=>wrPnl(b));
+  if(aC1I)aC1I.destroy();
+  aC1I=new Chart(document.getElementById('aC1'),{
+    type:'bar',
+    data:{
+      labels:['1','2','3','4','5','6','7','8','9','10'],
+      datasets:[{
+        label:'Win rate %',
+        data:convWR.map(v=>v.wr!==null?+v.wr.toFixed(1):null),
+        backgroundColor:convWR.map((_,i)=>i<3?'#E24B4A':i<6?'#F59E0B':'#1DB87A'),
+        borderRadius:4
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const b=convBuckets[ctx.dataIndex];return b.length?`WR: ${ctx.raw}% (${b.length} trades)`:'Sin datos';}}}},scales:{x:{ticks:{color:'#5C6480',font:{size:10}},grid:{display:false}},y:{max:100,ticks:{color:'#5C6480',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}}}}
+  });
+  const hiConv=convWR.slice(7).filter(v=>v.n>=2);
+  const loConv=convWR.slice(0,4).filter(v=>v.n>=2);
+  const hiWR=hiConv.length?hiConv.reduce((s,v)=>s+v.wr,0)/hiConv.length:null;
+  const loWR=loConv.length?loConv.reduce((s,v)=>s+v.wr,0)/loConv.length:null;
+  let ins1='';
+  if(hiWR!==null&&loWR!==null){
+    const diff=hiWR-loWR;
+    ins1=diff>15?`Alta convicción (8-10): ${hiWR.toFixed(0)}% WR vs baja (1-4): ${loWR.toFixed(0)}% WR. Tu instinto predice resultados — considera no entrar con convicción < 5.`:
+      diff<-10?`Convicción baja genera mejor WR (${loWR.toFixed(0)}%) que alta (${hiWR.toFixed(0)}%). Tu análisis frío funciona mejor que tu intuición — no uses la convicción como filtro.`:
+      `No hay diferencia significativa entre convicción alta y baja. Sigue acumulando datos.`;
+  } else ins1='Acumula más trades con nivel de convicción registrado para ver el patrón.';
+  document.getElementById('aC1-ins').textContent=ins1;
+
+  // ── 2. PENSAMIENTO DOMINANTE ──
+  const pensOrder=['ejecucion','duda-setup','exceso-confianza','revanche','fomo','presion-inactivo'];
+  const pensData=pensOrder.map(k=>{const arr=closed.filter(t=>t.pensamiento===k);return{k,arr,...wrPnl(arr)};}).filter(v=>v.n>0);
+  const pensShort={'ejecucion':'Ejecución','duda-setup':'Dudé','exceso-confianza':'Exceso conf.','revanche':'Revanchismo','fomo':'FOMO','presion-inactivo':'Presión'};
+  if(aC2I)aC2I.destroy();
+  aC2I=new Chart(document.getElementById('aC2'),{
+    type:'bar',
+    data:{
+      labels:pensData.map(v=>pensShort[v.k]||v.k),
+      datasets:[{
+        label:'Win rate %',
+        data:pensData.map(v=>v.wr!==null?+v.wr.toFixed(1):0),
+        backgroundColor:pensData.map(v=>v.wr>=65?'#1DB87A':v.wr>=45?'#F59E0B':'#E24B4A'),
+        borderRadius:4
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const d=pensData[ctx.dataIndex];return[`WR: ${ctx.raw}%`,`Trades: ${d.n}`,`P&L prom: $${d.avgPnl!==null?d.avgPnl.toFixed(2):'—'}`];}}}},scales:{x:{ticks:{color:'#5C6480',font:{size:9}},grid:{display:false}},y:{max:100,ticks:{color:'#5C6480',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}}}}
+  });
+  const worstPens=pensData.filter(v=>v.n>=3).sort((a,b)=>a.wr-b.wr)[0];
+  const bestPens=pensData.filter(v=>v.n>=3).sort((a,b)=>b.wr-a.wr)[0];
+  let ins2='';
+  if(worstPens&&bestPens){
+    const costWorst=worstPens.n*(worstPens.avgPnl||0);
+    ins2=`Mejor estado mental: "${pensShort[bestPens.k]}" → ${bestPens.wr.toFixed(0)}% WR. `;
+    ins2+=`Mayor riesgo: "${pensShort[worstPens.k]}" → ${worstPens.wr.toFixed(0)}% WR (${worstPens.n} trades, $${Math.abs(costWorst).toFixed(0)} impacto total).`;
+  }
+  document.getElementById('aC2-ins').textContent=ins2;
+
+  // ── 3. RACHA PREVIA ──
+  const rachaKeys=['ganando','neutro','perdiendo'];
+  const rachaData=rachaKeys.map(k=>{const arr=closed.filter(t=>t.rachaPrevia===k);return{k,arr,...wrPnl(arr)};});
+  if(aC3I)aC3I.destroy();
+  aC3I=new Chart(document.getElementById('aC3'),{
+    type:'bar',
+    data:{
+      labels:['Venías ganando','Neutro','Venías perdiendo'],
+      datasets:[{
+        label:'Win rate %',
+        data:rachaData.map(v=>v.wr!==null?+v.wr.toFixed(1):0),
+        backgroundColor:['#1DB87A','#9CA3B8','#E24B4A'],
+        borderRadius:4
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const d=rachaData[ctx.dataIndex];return d.n?`WR: ${ctx.raw}% (${d.n} trades)`:'Sin datos';}}}},scales:{x:{ticks:{color:'#5C6480',font:{size:9}},grid:{display:false}},y:{max:100,ticks:{color:'#5C6480',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}}}}
+  });
+  const rG=rachaData[0],rP=rachaData[2];
+  let ins3='';
+  if(rG.n>=3&&rP.n>=3){
+    ins3=rP.wr<rG.wr-15?`Después de racha perdedora tu WR cae a ${rP.wr.toFixed(0)}% vs ${rG.wr.toFixed(0)}% cuando venías ganando. El estado emocional post-pérdida te afecta significativamente.`:
+      rG.wr<rP.wr-10?`Tu WR mejora después de perder (${rP.wr.toFixed(0)}%) vs ganar (${rG.wr.toFixed(0)}%). Posible exceso de confianza en racha ganadora.`:
+      `La racha previa no afecta significativamente tu rendimiento. Buena estabilidad emocional.`;
+  } else ins3='Acumula más trades para ver el impacto de la racha previa.';
+  document.getElementById('aC3-ins').textContent=ins3;
+
+  // ── 4. PROCESO ──
+  const procKeys=['si','parcial','no'];
+  const procLabels=['Sí completamente','Parcialmente','No respetado'];
+  const procData=procKeys.map(k=>{const arr=closed.filter(t=>t.proceso===k);return{k,arr,...wrPnl(arr)};});
+  if(aC4I)aC4I.destroy();
+  aC4I=new Chart(document.getElementById('aC4'),{
+    type:'bar',
+    data:{
+      labels:procLabels,
+      datasets:[
+        {label:'Win rate %',data:procData.map(v=>v.wr!==null?+v.wr.toFixed(1):0),backgroundColor:['#1DB87A','#F59E0B','#E24B4A'],borderRadius:4,yAxisID:'y'},
+        {label:'P&L promedio $',data:procData.map(v=>v.avgPnl!==null?+v.avgPnl.toFixed(2):0),backgroundColor:procData.map(v=>(v.avgPnl||0)>=0?'rgba(29,184,122,0.3)':'rgba(226,75,74,0.3)'),borderRadius:4,yAxisID:'y2'}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5C6480',font:{size:9}},grid:{display:false}},y:{max:100,position:'left',ticks:{color:'#5C6480',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}},y2:{position:'right',ticks:{color:'#5C6480',font:{size:9},callback:v=>'$'+v},grid:{display:false}}}}
+  });
+  const pSi=procData[0],pNo=procData[2];
+  let ins4='';
+  if(pSi.n>=3&&pNo.n>=3){
+    const costIndis=pNo.n*(pNo.avgPnl||0);
+    ins4=`Respetando el proceso: ${pSi.wr.toFixed(0)}% WR · Sin respetar: ${pNo.wr.toFixed(0)}% WR. `;
+    ins4+=`Costo total de la indisciplina: $${Math.abs(costIndis).toFixed(2)} en ${pNo.n} trades.`;
+  } else if(pSi.n>=3) ins4=`Cuando respetas el proceso: ${pSi.wr.toFixed(0)}% WR (${pSi.n} trades). Acumula más trades fuera del plan para comparar.`;
+  else ins4='Acumula más datos de proceso para ver la correlación.';
+  document.getElementById('aC4-ins').textContent=ins4;
+
+  // ── 5. PRESIÓN WIN vs LOSS ──
+  const presWin=closed.filter(t=>t.result==='WIN'&&t.presion!=null).map(t=>t.presion);
+  const presLoss=closed.filter(t=>t.result==='LOSS'&&t.presion!=null).map(t=>t.presion);
+  const presBE=closed.filter(t=>t.result==='BE'&&t.presion!=null).map(t=>t.presion);
+  const avgPresW=presWin.length?presWin.reduce((a,b)=>a+b,0)/presWin.length:0;
+  const avgPresL=presLoss.length?presLoss.reduce((a,b)=>a+b,0)/presLoss.length:0;
+  const avgPresBE=presBE.length?presBE.reduce((a,b)=>a+b,0)/presBE.length:0;
+  // Distribution of pressure levels for wins and losses
+  const presDistW=Array.from({length:5},(_,i)=>presWin.filter(p=>p===i+1).length);
+  const presDistL=Array.from({length:5},(_,i)=>presLoss.filter(p=>p===i+1).length);
+  if(aC5I)aC5I.destroy();
+  aC5I=new Chart(document.getElementById('aC5'),{
+    type:'bar',
+    data:{
+      labels:['Presión 1','2','3','4','5'],
+      datasets:[
+        {label:'WIN',data:presDistW,backgroundColor:'rgba(29,184,122,0.7)',borderRadius:3},
+        {label:'LOSS',data:presDistL,backgroundColor:'rgba(226,75,74,0.7)',borderRadius:3}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#9CA3B8',font:{size:10}}}},scales:{x:{ticks:{color:'#5C6480',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#5C6480',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}}}}
+  });
+  let ins5='';
+  if(presWin.length>=3||presLoss.length>=3){
+    ins5=`Presión promedio en WIN: ${avgPresW.toFixed(1)}/5 · En LOSS: ${avgPresL.toFixed(1)}/5. `;
+    ins5+=avgPresL-avgPresW>0.8?`Operas con más presión cuando pierdes — la presión alta predice pérdida. Si sientes presión ≥4 antes de entrar, considera reducir el tamaño.`:
+      avgPresW-avgPresL>0.5?`Presión similar en WIN y LOSS. La presión no es un predictor claro en tu caso.`:
+      `Diferencia pequeña — sigue registrando para confirmar el patrón.`;
+  } else ins5='Acumula más datos de presión para ver la correlación.';
+  document.getElementById('aC5-ins').textContent=ins5;
+
+  // ── 6. EVOLUCIÓN SEMANAL ──
+  const byWeek={};
+  closed.forEach(t=>{
+    if(!t.di)return;
+    const d=new Date(t.di+'T12:00:00');
+    const day=d.getDay();
+    const diff=d.getDate()-day+(day===0?-6:1);
+    const mon=new Date(d.setDate(diff));
+    const wk=mon.toISOString().split('T')[0];
+    if(!byWeek[wk])byWeek[wk]={trades:[],convSum:0,convN:0};
+    byWeek[wk].trades.push(t);
+    if(t.conviccion!=null){byWeek[wk].convSum+=t.conviccion;byWeek[wk].convN++;}
+  });
+  const wkKeys=Object.keys(byWeek).sort();
+  const wkWR=wkKeys.map(k=>{const ts=byWeek[k].trades;const w=ts.filter(t=>t.result==='WIN').length;return ts.length?+(w/ts.length*100).toFixed(1):0;});
+  const wkConv=wkKeys.map(k=>byWeek[k].convN?+(byWeek[k].convSum/byWeek[k].convN).toFixed(1):null);
+  const wkLabels=wkKeys.map(k=>{const d=new Date(k+'T12:00:00');return `${d.getDate()}/${d.getMonth()+1}`;});
+  if(aC6I)aC6I.destroy();
+  aC6I=new Chart(document.getElementById('aC6'),{
+    type:'line',
+    data:{
+      labels:wkLabels,
+      datasets:[
+        {label:'Win rate %',data:wkWR,borderColor:'#1DB87A',backgroundColor:'rgba(29,184,122,0.06)',borderWidth:2,pointRadius:3,fill:true,tension:0.3,yAxisID:'y'},
+        {label:'Convicción prom',data:wkConv,borderColor:'#9B7FE8',backgroundColor:'transparent',borderWidth:2,pointRadius:3,borderDash:[4,2],tension:0.3,yAxisID:'y2'}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#9CA3B8',font:{size:10}}}},scales:{x:{ticks:{color:'#5C6480',font:{size:9}},grid:{display:false}},y:{max:100,position:'left',ticks:{color:'#5C6480',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}},y2:{max:10,position:'right',ticks:{color:'#5C6480',font:{size:9}},grid:{display:false}}}}
+  });
+  const wkTrend=wkWR.length>=3?(wkWR[wkWR.length-1]-wkWR[0]>10?'positiva 📈':wkWR[wkWR.length-1]-wkWR[0]<-10?'negativa 📉':'estable ➡️'):'—';
+  document.getElementById('aC6-ins').textContent=wkKeys.length>=2?`Tendencia de Win rate: ${wkTrend}. Semanas analizadas: ${wkKeys.length}.`:'Acumula trades en más semanas para ver la evolución.';
+
+  // ── TABLA COMPLETA ──
+  const rows=[];
+  // Convicción agrupada
+  [{label:'Convicción baja (1-4)',arr:closed.filter(t=>t.conviccion!=null&&t.conviccion<=4)},
+   {label:'Convicción media (5-7)',arr:closed.filter(t=>t.conviccion!=null&&t.conviccion>=5&&t.conviccion<=7)},
+   {label:'Convicción alta (8-10)',arr:closed.filter(t=>t.conviccion!=null&&t.conviccion>=8)}
+  ].forEach(g=>{const r=wrPnl(g.arr);if(r.n)rows.push({cat:'Convicción',val:g.label,n:r.n,wr:r.wr,pnl:r.avgPnl});});
+  // Pensamiento
+  pensData.forEach(v=>{rows.push({cat:'Pensamiento',val:PENS_LABELS[v.k]||v.k,n:v.n,wr:v.wr,pnl:v.avgPnl});});
+  // Racha
+  rachaData.forEach((v,i)=>{if(v.n)rows.push({cat:'Racha previa',val:['Venías ganando','Neutro','Venías perdiendo'][i],n:v.n,wr:v.wr,pnl:v.avgPnl});});
+  // Proceso
+  procData.forEach((v,i)=>{if(v.n)rows.push({cat:'Proceso',val:procLabels[i],n:v.n,wr:v.wr,pnl:v.avgPnl});});
+  // Presión
+  [{label:'Presión baja (1-2)',arr:closed.filter(t=>t.presion!=null&&t.presion<=2)},
+   {label:'Presión media (3)',arr:closed.filter(t=>t.presion===3)},
+   {label:'Presión alta (4-5)',arr:closed.filter(t=>t.presion!=null&&t.presion>=4)}
+  ].forEach(g=>{const r=wrPnl(g.arr);if(r.n)rows.push({cat:'Presión',val:g.label,n:r.n,wr:r.wr,pnl:r.avgPnl});});
+
+  document.getElementById('psych-tbody').innerHTML=rows.map(r=>{
+    const sig=sigLabel(r.wr,r.n);
+    const wrCol=r.wr>=65?'var(--gr)':r.wr>=45?'var(--am)':'var(--rd)';
+    const pnlCol=r.pnl>=0?'var(--gr)':'var(--rd)';
+    return `<tr>
+      <td style="color:var(--tx3);font-size:11px">${r.cat}</td>
+      <td style="font-size:12px">${r.val}</td>
+      <td style="text-align:center">${r.n}</td>
+      <td style="color:${wrCol};font-weight:600">${r.wr.toFixed(0)}%</td>
+      <td style="color:${pnlCol}">${r.pnl>=0?'+':''}$${r.pnl.toFixed(2)}</td>
+      <td>${sig}</td>
+    </tr>`;
+  }).join('');
+
+  // ── ALERTAS SEMÁFORO ──
+  const alertas=[];
+  // Detectar patrones críticos
+  const fomo=pensData.find(v=>v.k==='fomo'&&v.n>=3);
+  if(fomo&&fomo.wr<50)alertas.push({tipo:'🔴',txt:`FOMO — ${fomo.wr.toFixed(0)}% WR en ${fomo.n} trades. Costo total: $${Math.abs(fomo.n*(fomo.avgPnl||0)).toFixed(2)}.`,color:'var(--rd)',bg:'var(--rdb)'});
+  const revanche=pensData.find(v=>v.k==='revanche'&&v.n>=2);
+  if(revanche&&revanche.wr<55)alertas.push({tipo:'🔴',txt:`Revanchismo — ${revanche.wr.toFixed(0)}% WR. Opera con sesgo de recuperar pérdidas.`,color:'var(--rd)',bg:'var(--rdb)'});
+  if(pNo.n>=3&&pSi.n>=3&&pNo.wr<pSi.wr-20)alertas.push({tipo:'🔴',txt:`Indisciplina costosa — WR cae ${(pSi.wr-pNo.wr).toFixed(0)} puntos cuando no respetas el plan.`,color:'var(--rd)',bg:'var(--rdb)'});
+  if(rP.n>=3&&rG.n>=3&&rP.wr<rG.wr-20)alertas.push({tipo:'🟡',txt:`Racha perdedora afecta rendimiento — WR baja ${(rG.wr-rP.wr).toFixed(0)} puntos después de perder.`,color:'var(--am)',bg:'var(--amb)'});
+  if(avgPresL-avgPresW>1)alertas.push({tipo:'🟡',txt:`Presión alta correlaciona con pérdidas — promedio ${avgPresL.toFixed(1)}/5 en LOSS vs ${avgPresW.toFixed(1)}/5 en WIN.`,color:'var(--am)',bg:'var(--amb)'});
+  // Fortalezas
+  const ejec=pensData.find(v=>v.k==='ejecucion'&&v.n>=3);
+  if(ejec&&ejec.wr>=70)alertas.push({tipo:'🟢',txt:`Modo ejecución — tu mejor estado: ${ejec.wr.toFixed(0)}% WR en ${ejec.n} trades. Mantenerlo es tu prioridad.`,color:'var(--gr)',bg:'var(--grb)'});
+  if(hiWR&&hiWR-loWR>15)alertas.push({tipo:'🟢',txt:`Alta convicción predice éxito — ${hiWR.toFixed(0)}% WR con convicción 8-10. Úsalo como filtro de entrada.`,color:'var(--gr)',bg:'var(--grb)'});
+
+  document.getElementById('alertas-wrap').innerHTML=alertas.length?alertas.map(a=>`
+    <div style="background:${a.bg};border:1px solid ${a.color};border-radius:var(--ra);padding:10px 14px;margin-bottom:8px;font-size:12.5px;color:${a.color};display:flex;gap:10px;align-items:flex-start">
+      <span style="font-size:16px;flex-shrink:0">${a.tipo}</span><span>${a.txt}</span>
+    </div>`).join(''):'';
+
+  // ── RESUMEN EJECUTIVO ──
+  const totalPsychTrades=psychTrades.length;
+  const overallWR=wrPnl(closed).wr||0;
+  let summary=`Análisis basado en <strong>${totalPsychTrades} trades</strong> con datos de psicología registrados. `;
+  if(ejec&&ejec.n>=3)summary+=`Tu mayor fortaleza es operar en modo ejecución — <strong>${ejec.wr.toFixed(0)}% WR</strong>. `;
+  if(worstPens&&worstPens.n>=3&&worstPens.wr<50)summary+=`Tu mayor riesgo es el estado "<strong>${pensShort[worstPens.k]}</strong>" con <strong>${worstPens.wr.toFixed(0)}% WR</strong>. `;
+  if(rP.n>=3&&rG.n>=3&&Math.abs(rP.wr-rG.wr)>15)summary+=`La racha previa te afecta: WR de <strong>${rG.wr.toFixed(0)}%</strong> ganando vs <strong>${rP.wr.toFixed(0)}%</strong> perdiendo. `;
+  if(pSi.n>=3&&pNo.n>=3)summary+=`Respetando el proceso: <strong>${pSi.wr.toFixed(0)}%</strong> WR vs <strong>${pNo.wr.toFixed(0)}%</strong> sin respetar. `;
+  if(!summary.includes('mayor fortaleza'))summary+='Sigue registrando trades para identificar patrones estadísticamente significativos. ';
+  document.getElementById('exec-summary').innerHTML=summary;
+}
+
+function exportReporte(){
+  const closed=trades.filter(t=>t.status!=='open');
+  const psychTrades=closed.filter(t=>t.conviccion!=null||t.pensamiento!=null||t.proceso!=null);
+  const now=new Date().toLocaleDateString('es-CO');
+  function wrPnl(arr){if(!arr.length)return{wr:0,avgPnl:0,n:0};const w=arr.filter(t=>t.result==='WIN').length;const pnls=arr.map(t=>parseFloat(t.pnl)||0);return{wr:w/arr.length*100,avgPnl:pnls.reduce((a,b)=>a+b,0)/pnls.length,n:arr.length};}
+  const ejec=wrPnl(closed.filter(t=>t.pensamiento==='ejecucion'));
+  const fomo=wrPnl(closed.filter(t=>t.pensamiento==='fomo'));
+  const pSi=wrPnl(closed.filter(t=>t.proceso==='si'));
+  const pNo=wrPnl(closed.filter(t=>t.proceso==='no'));
+  const presW=closed.filter(t=>t.result==='WIN'&&t.presion!=null).map(t=>t.presion);
+  const presL=closed.filter(t=>t.result==='LOSS'&&t.presion!=null).map(t=>t.presion);
+  const avgPW=presW.length?presW.reduce((a,b)=>a+b,0)/presW.length:0;
+  const avgPL=presL.length?presL.reduce((a,b)=>a+b,0)/presL.length:0;
+  const hiConv=wrPnl(closed.filter(t=>t.conviccion!=null&&t.conviccion>=8));
+  const loConv=wrPnl(closed.filter(t=>t.conviccion!=null&&t.conviccion<=4));
+  const rG=wrPnl(closed.filter(t=>t.rachaPrevia==='ganando'));
+  const rP=wrPnl(closed.filter(t=>t.rachaPrevia==='perdiendo'));
+
+  const txt=`REPORTE DE PERFORMANCE PSICOLÓGICA — EUR/USD
+Cuenta: ${cfg.acct||'—'}
+Generado: ${now}
+Trades analizados: ${psychTrades.length} / ${closed.length} cerrados
+${'='.repeat(55)}
+
+1. CONVICCIÓN
+   Alta (8-10): ${hiConv.n} trades · WR ${hiConv.wr.toFixed(0)}% · P&L prom $${hiConv.avgPnl.toFixed(2)}
+   Baja (1-4):  ${loConv.n} trades · WR ${loConv.wr.toFixed(0)}% · P&L prom $${loConv.avgPnl.toFixed(2)}
+   → Diferencia: ${(hiConv.wr-loConv.wr).toFixed(0)} puntos porcentuales
+
+2. PENSAMIENTO DOMINANTE
+   Modo ejecución: ${ejec.n} trades · WR ${ejec.wr.toFixed(0)}% · P&L prom $${ejec.avgPnl.toFixed(2)}
+   FOMO:          ${fomo.n} trades · WR ${fomo.wr.toFixed(0)}% · P&L prom $${fomo.avgPnl.toFixed(2)}
+   Costo total FOMO: $${Math.abs(fomo.n*fomo.avgPnl).toFixed(2)}
+
+3. RACHA PREVIA
+   Venía ganando: ${rG.n} trades · WR ${rG.wr.toFixed(0)}%
+   Venía perdiendo: ${rP.n} trades · WR ${rP.wr.toFixed(0)}%
+
+4. PROCESO
+   Respetado completamente: ${pSi.n} trades · WR ${pSi.wr.toFixed(0)}% · $${pSi.avgPnl.toFixed(2)} prom
+   No respetado:            ${pNo.n} trades · WR ${pNo.wr.toFixed(0)}% · $${pNo.avgPnl.toFixed(2)} prom
+   Costo de indisciplina: $${Math.abs(pNo.n*pNo.avgPnl).toFixed(2)} total
+
+5. PRESIÓN
+   Promedio en WIN:  ${avgPW.toFixed(2)}/5
+   Promedio en LOSS: ${avgPL.toFixed(2)}/5
+   → ${avgPL-avgPW>0.5?'La presión alta predice pérdida en tu caso.':'Sin correlación clara presión-resultado.'}
+
+${'='.repeat(55)}
+PATRONES PRIORITARIOS PARA EL CURSO:
+${fomo.n>=3&&fomo.wr<50?'· Trabajar gestión del FOMO — costo medible\n':''}${pNo.n>=3&&pNo.wr<pSi.wr-15?'· Disciplina de proceso — mayor impacto en WR\n':''}${rP.n>=3&&rP.wr<rG.wr-15?'· Manejo emocional post-pérdida\n':''}${avgPL-avgPW>1?'· Técnicas de reducción de presión intra-trade\n':''}`;
+
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+  a.download=`reporte_performance_${new Date().toISOString().split('T')[0]}.txt`;
+  a.click();
+}
+
+</script>
+</body>
+</html>

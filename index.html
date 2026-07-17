@@ -338,7 +338,7 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
     </div>
     <div class="fr">
       <div class="fi"><label>Bias del día</label><select id="bias"><option value="">—</option><option>Alcista</option><option>Bajista</option><option>Neutral / sin bias</option></select></div>
-      <div class="fi"><label>¿Noticias de alto impacto hoy?</label><select id="news"><option value="">—</option><option>Sí — antes de mi entrada</option><option>Sí — después de cerrar</option><option>No</option></select></div>
+      <div class="fi"><label>¿Noticias de alto impacto hoy?</label><select id="news"><option value="">—</option><option value="si-antes">Sí — antes de mi entrada</option><option value="si-despues">Sí — después de mi entrada</option><option value="no">No hay noticias</option></select></div>
     </div>
     <div class="fi"><label>Notas de apertura</label><textarea id="nopen" placeholder="Contexto macro, niveles clave, expectativas de sesión..."></textarea></div>
   </div>
@@ -350,6 +350,46 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
       <div class="sd-bw">
         <div class="sd-bt"><div class="sd-bf" id="sd-bar" style="width:0%"></div></div>
         <div class="sd-lbl" id="sd-lbl">Completa el checklist para obtener el score del setup</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRE-TRADE PSYCHOLOGY — before executing -->
+  <div class="blk">
+    <div class="bh"><div class="bt2"><div class="bnum" style="background:var(--pu)">🧠</div> Psicología — Pre-trade</div></div>
+    <p style="font-size:11px;color:var(--tx3);margin-bottom:12px;font-style:italic">Llena esto antes de ejecutar. Se correlacionará con el resultado para identificar patrones.</p>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">Racha previa (calculada automáticamente)</div>
+      <div class="racha-info" id="racha-display" style="background:var(--sur3);color:var(--tx3)">—</div>
+    </div>
+
+    <div class="fi" style="margin-bottom:12px">
+      <label>Nivel de convicción al entrar</label>
+      <div class="conv-grid" id="conv-grid">
+        <button class="conv-btn" onclick="setConv(1,this)">1</button>
+        <button class="conv-btn" onclick="setConv(2,this)">2</button>
+        <button class="conv-btn" onclick="setConv(3,this)">3</button>
+        <button class="conv-btn" onclick="setConv(4,this)">4</button>
+        <button class="conv-btn" onclick="setConv(5,this)">5</button>
+        <button class="conv-btn" onclick="setConv(6,this)">6</button>
+        <button class="conv-btn" onclick="setConv(7,this)">7</button>
+        <button class="conv-btn" onclick="setConv(8,this)">8</button>
+        <button class="conv-btn" onclick="setConv(9,this)">9</button>
+        <button class="conv-btn" onclick="setConv(10,this)">10</button>
+      </div>
+      <div style="font-size:10px;color:var(--tx3);margin-top:4px">1 = Mucha duda · 10 = Convicción total</div>
+    </div>
+
+    <div class="fi" style="margin-bottom:4px">
+      <label>Pensamiento dominante al entrar</label>
+      <div class="psy-grid" id="pens-grid">
+        <button class="psy-btn" onclick="setPens('ejecucion',this)">🎯 En modo ejecución — análisis claro, sin dudas</button>
+        <button class="psy-btn" onclick="setPens('duda-setup',this)">🤔 Dudé pero el setup cumplía los criterios</button>
+        <button class="psy-btn" onclick="setPens('exceso-confianza',this)">😎 Sentía que era "seguro" — exceso de confianza</button>
+        <button class="psy-btn" onclick="setPens('revanche',this)">😤 Quería recuperar pérdida anterior</button>
+        <button class="psy-btn" onclick="setPens('fomo',this)">⚡ Miedo a perder el movimiento (FOMO)</button>
+        <button class="psy-btn" onclick="setPens('presion-inactivo',this)">😟 Presión por no haber operado en un tiempo</button>
       </div>
     </div>
   </div>
@@ -459,41 +499,39 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
       <button class="rb" id="rbe" onclick="setRes('BE',this)">Breakeven</button>
     </div>
 
-    <div class="sdiv">Psicología — Pre-trade <span class="tm">manual</span></div>
-    <p style="font-size:11px;color:var(--tx3);margin-bottom:10px;font-style:italic">Llena esto antes de ejecutar el trade. Será correlacionado con el resultado.</p>
-
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;color:var(--tx3);margin-bottom:4px">Racha previa (calculada automáticamente)</div>
-      <div class="racha-info" id="racha-display" style="background:var(--sur3);color:var(--tx3)">—</div>
+    <div class="sdiv">Anti-FOMO <span class="tm">manual</span></div>
+    <div class="fi" style="margin-bottom:10px">
+      <label>¿Lo tomé? ¿Por qué?</label>
+      <select id="ttook" onchange="toggleCF()">
+        <option value="">— Selecciona —</option>
+        <optgroup label="Sí lo tomé">
+          <option value="si-criterios">Sí — Cumplía todos los criterios</option>
+          <option value="si-fomo">Sí — FOMO (miedo a perder el movimiento)</option>
+          <option value="si-revanche">Sí — Revanchismo (quería recuperar pérdida)</option>
+        </optgroup>
+        <optgroup label="No lo tomé">
+          <option value="no-no-vi">No — No la vi / estaba fuera</option>
+          <option value="no-dude">No — La vi pero dudé en el momento</option>
+          <option value="no-confirmacion">No — Esperaba demasiada confirmación</option>
+          <option value="no-sesgo">No — Estaba sesgado del lado contrario</option>
+        </optgroup>
+      </select>
+    </div>
+    <div id="cfbox" style="display:none;margin-bottom:10px">
+      <div class="fr">
+        <div class="fi"><label>¿Qué hubiera pasado si la tomabas?</label><select id="cf-result"><option value="">—</option><option>Hubiera ganado</option><option>Hubiera perdido</option><option>Hubiera sido breakeven</option><option>No lo sé</option></select></div>
+        <div class="fi"><label>RR hipotético</label><input type="number" id="cf-rr" step="0.1" placeholder="2.0"></div>
+      </div>
     </div>
 
-    <div class="fi" style="margin-bottom:12px">
-      <label>Nivel de convicción al entrar</label>
-      <div class="conv-grid" id="conv-grid">
-        <button class="conv-btn" onclick="setConv(1,this)">1</button>
-        <button class="conv-btn" onclick="setConv(2,this)">2</button>
-        <button class="conv-btn" onclick="setConv(3,this)">3</button>
-        <button class="conv-btn" onclick="setConv(4,this)">4</button>
-        <button class="conv-btn" onclick="setConv(5,this)">5</button>
-        <button class="conv-btn" onclick="setConv(6,this)">6</button>
-        <button class="conv-btn" onclick="setConv(7,this)">7</button>
-        <button class="conv-btn" onclick="setConv(8,this)">8</button>
-        <button class="conv-btn" onclick="setConv(9,this)">9</button>
-        <button class="conv-btn" onclick="setConv(10,this)">10</button>
-      </div>
-      <div style="font-size:10px;color:var(--tx3);margin-top:4px">1 = Mucha duda · 10 = Convicción total</div>
+    <div class="sdiv">Disciplina de ejecución <span class="tm">manual</span></div>
+    <div class="fi" style="margin-bottom:10px">
+      <label>¿Ejecuté el plan tal cual lo tenía pensado?</label>
+      <select id="exec-plan" onchange="toggleEN()"><option value="">—</option><option>Sí, sin desviaciones</option><option>No, improvisé en algún punto</option></select>
     </div>
-
-    <div class="fi" style="margin-bottom:12px">
-      <label>Pensamiento dominante al entrar</label>
-      <div class="psy-grid" id="pens-grid">
-        <button class="psy-btn" onclick="setPens('ejecucion',this)">🎯 En modo ejecución — análisis claro, sin dudas</button>
-        <button class="psy-btn" onclick="setPens('duda-setup',this)">🤔 Dudé pero el setup cumplía los criterios</button>
-        <button class="psy-btn" onclick="setPens('exceso-confianza',this)">😎 Sentía que era "seguro" — exceso de confianza</button>
-        <button class="psy-btn" onclick="setPens('revanche',this)">😤 Quería recuperar pérdida anterior</button>
-        <button class="psy-btn" onclick="setPens('fomo',this)">⚡ Miedo a perder el movimiento (FOMO)</button>
-        <button class="psy-btn" onclick="setPens('presion-inactivo',this)">😟 Presión por no haber operado en un tiempo</button>
-      </div>
+    <div class="fi" id="exec-note-wrap" style="display:none;margin-bottom:10px">
+      <label>¿En qué momento improvisaste?</label>
+      <textarea id="exec-note" placeholder="Ej: moví el SL, cerré antes por miedo..."></textarea>
     </div>
 
     <div class="sdiv">Psicología — Post-trade <span class="tm">completar al cerrar</span></div>
@@ -594,6 +632,10 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
 <div style="max-width:560px">
   <div class="card">
     <div class="card-ttl">Parámetros — EUR/USD · The5ers</div>
+    <div style="display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap">
+      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Balance actual (base del riesgo)</div><div style="font-size:18px;font-weight:600;color:var(--gr)" id="calc-bal-cur">—</div></div>
+      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Balance inicial (referencia drawdown)</div><div style="font-size:18px;font-weight:600;color:var(--tx2)" id="calc-bal-ini">—</div></div>
+    </div>
     <div class="fr" style="margin-bottom:6px">
       <div class="fi"><label>Balance ($)</label><input type="number" id="cbal" placeholder="10000" oninput="calcRef()"></div>
       <div class="fi"><label>Riesgo %</label><input type="number" id="crisk" value="0.4" step="0.1" min="0.1" oninput="calcRef()"></div>
@@ -898,7 +940,12 @@ function sw(name,btn){
   if(name==='trades')renderList();
   if(name==='form')updateRachaDisplay();
   if(name==='analisis')renderAnalisis();
-  if(name==='calc'){document.getElementById('cbal').value=cfg.balance||'';calcRef();}
+  if(name==='calc'){
+    const curBal=getCurrentBalance();
+    document.getElementById('cbal').value=curBal.toFixed(2);
+    document.getElementById('crisk').value=cfg.risk;
+    calcRef();
+  }
 }
 function openCfg(){
   document.getElementById('cfgmodal').style.display='flex';
@@ -952,7 +999,7 @@ function calcDerived(){
   else document.getElementById('out-rrgap').textContent='—';
   if(rf!==null&&lot>0){
     const slPips=rd*10000; // convert price to pips
-    const pnlBrut=rf*(cfg.balance*cfg.risk/100);
+    const pnlBrut=rf*(getCurrentBalance()*cfg.risk/100);
     const comm=4*lot;
     // Si gana: P&L neto = ganancia - comisión
     // Si pierde: costo total = pérdida + comisión
@@ -994,7 +1041,7 @@ function getStats(){
   const avgRRwins=rrWins.length?rrWins.reduce((a,b)=>a+b,0)/rrWins.length:0;
   // EV = (WR × RR avg ganadores) − (LR × 1)
   const evR=rrWins.length&&losses.length?(wr*avgRRwins)-(lr*1):rrWins.length?(wr*avgRRwins):0;
-  const evUSD=evR*(cfg.balance*cfg.risk/100);
+  const evUSD=evR*(getCurrentBalance()*cfg.risk/100);
   // Sharpe
   const allPnls=closed.filter(t=>parseFloat(t.pnl)!==0&&!isNaN(parseFloat(t.pnl))).map(t=>parseFloat(t.pnl));
   const avgPnl=allPnls.length?allPnls.reduce((a,b)=>a+b,0)/allPnls.length:0;
@@ -1450,11 +1497,12 @@ function setPresion(val,btn){
 
 // ── SAVE TRADE ──
 function saveTrade(mode='complete'){
+  try{
   if(!cfg.balance){showMsg('Configura el balance primero.');return;}
   const dir=document.getElementById('tdir').value,di=document.getElementById('tdi').value;
   if(!dir||!di){showMsg('Completa al menos: dirección y fecha de entrada.');return;}
   if(mode==='complete'&&!curRes){showMsg('Selecciona el resultado del trade (Win / Loss / BE).');return;}
-  const gOpt=-1; // gestion block removed
+  const gOpt=-1;
   const entry=parseFloat(document.getElementById('pentry').value)||null;
   const sl=parseFloat(document.getElementById('psl').value)||null;
   const tp=parseFloat(document.getElementById('ptp').value)||null;
@@ -1483,14 +1531,10 @@ function saveTrade(mode='complete'){
     cfRR:document.getElementById('cf-rr').value,
     execPlan:document.getElementById('exec-plan').value,
     execNote:document.getElementById('exec-note').value,
-    // Psychology
-    conviccion:curConv,
-    pensamiento:curPens,
+    conviccion:curConv,pensamiento:curPens,
     rachaPrevia:getStreakInfo().type,
-    postEmo:curPostEmo,
-    proceso:curProceso,
-    desviacion:curDesv,
-    presion:curPresion,
+    postEmo:curPostEmo,proceso:curProceso,
+    desviacion:curDesv,presion:curPresion,
     screenshot:document.getElementById('tss').value,
     notes:document.getElementById('tnotes').value,
     notesClose:document.getElementById('tnc').value,
@@ -1501,8 +1545,13 @@ function saveTrade(mode='complete'){
     notesOpen:document.getElementById('nopen').value
   });
   persist();
-  showMsg(mode==='open'?'Trade en curso guardado — complétalo cuando cierre.':'Trade guardado correctamente.','ok');
+  showMsg(mode==='open'?'⏳ Trade en curso guardado — complétalo cuando cierre.':'✓ Trade guardado correctamente.','ok');
   resetForm();renderAll();
+  window.scrollTo(0,0);
+  }catch(err){
+    alert('Error al guardar: '+err.message);
+    console.error(err);
+  }
 }
 function showMsg(msg,type='err'){
   const a=document.getElementById('savemsg');a.textContent=msg;a.style.display='block';
@@ -1540,8 +1589,14 @@ function resetForm(){
 
 // ── CALCULADORA ──
 function calcRef(){
-  const bal=parseFloat(document.getElementById('cbal').value)||cfg.balance||0;
-  const risk=parseFloat(document.getElementById('crisk').value)||0.4;
+  const curBal=getCurrentBalance();
+  const bal=parseFloat(document.getElementById('cbal').value)||curBal||0;
+  const risk=parseFloat(document.getElementById('crisk').value)||cfg.risk||0.4;
+  // Update display
+  const elCur=document.getElementById('calc-bal-cur');
+  const elIni=document.getElementById('calc-bal-ini');
+  if(elCur)elCur.textContent='$'+curBal.toLocaleString('en-US',{minimumFractionDigits:2});
+  if(elIni)elIni.textContent='$'+(cfg.balance||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const rAmt=bal*risk/100;
   const SLS=[5,7,10,12,15,17,20,25,30,35,40,50];
   document.getElementById('reftbody').innerHTML=SLS.map(sl=>{
@@ -1549,12 +1604,14 @@ function calcRef(){
     const rounded=Math.floor(lots*100)/100;
     const comm=4*rounded;
     const totalRisk=rAmt+comm;
-    const totalPct=cfg.balance?totalRisk/cfg.balance*100:0;
-    return `<tr><td>${sl}</td><td>$${rAmt.toFixed(2)}</td><td>${lots.toFixed(4)}</td><td>${rounded.toFixed(2)}</td><td style="color:var(--am)">+$${comm.toFixed(2)}</td><td style="color:var(--rd);font-weight:600">$${totalRisk.toFixed(2)}</td><td style="color:var(--tx3);font-size:11px">${totalPct.toFixed(3)}%</td></tr>`;
+    const totalPctCur=curBal?totalRisk/curBal*100:0;
+    const totalPctIni=cfg.balance?totalRisk/cfg.balance*100:0;
+    return `<tr><td>${sl}</td><td>$${rAmt.toFixed(2)}</td><td>${lots.toFixed(4)}</td><td>${rounded.toFixed(2)}</td><td style="color:var(--am)">+$${comm.toFixed(2)}</td><td style="color:var(--rd);font-weight:600">$${totalRisk.toFixed(2)}</td><td style="color:var(--tx3);font-size:11px">${totalPctCur.toFixed(3)}% actual<br><span style="color:var(--tx3);opacity:.6">${totalPctIni.toFixed(3)}% inicial</span></td></tr>`;
   }).join('');
 }
 function calcCustom(){
-  const bal=parseFloat(document.getElementById('cbal').value)||cfg.balance||0;
+  const curBal=getCurrentBalance();
+  const bal=parseFloat(document.getElementById('cbal').value)||curBal||0;
   const sl=parseFloat(document.getElementById('csl').value);
   const risk=parseFloat(document.getElementById('crisk2').value)||cfg.risk||0.4;
   const out=document.getElementById('customout');
@@ -1564,15 +1621,18 @@ function calcCustom(){
   const rounded=Math.floor(lots*100)/100;
   const comm=4*rounded;
   const totalRisk=rAmt+comm;
-  const totalPct=bal?totalRisk/bal*100:0;
+  const totalPctCur=curBal?totalRisk/curBal*100:0;
+  const totalPctIni=cfg.balance?totalRisk/cfg.balance*100:0;
   out.innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotaje exacto</div><div style="font-size:24px;font-weight:600;color:var(--gr)">${lots.toFixed(4)}</div></div>
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotes redondeados (↓)</div><div style="font-size:24px;font-weight:600;color:var(--tx)">${rounded.toFixed(2)}</div></div>
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">$ riesgo (si SL toca)</div><div style="font-size:24px;font-weight:600;color:var(--am)">$${rAmt.toFixed(2)}</div></div>
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Comisión adicional</div><div style="font-size:24px;font-weight:600;color:var(--am)">+$${comm.toFixed(2)}</div></div>
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Costo total si pierdo</div><div style="font-size:24px;font-weight:600;color:var(--rd)">$${totalRisk.toFixed(2)}</div></div>
-    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% real sobre cuenta</div><div style="font-size:24px;font-weight:600;color:var(--tx3)">${totalPct.toFixed(3)}%</div></div>
-  </div>`;
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% balance actual</div><div style="font-size:24px;font-weight:600;color:var(--tx3)">${totalPctCur.toFixed(3)}%</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% balance inicial</div><div style="font-size:20px;font-weight:600;color:var(--tx3);opacity:.6">${totalPctIni.toFixed(3)}%</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:11px;color:var(--tx3)">Balance actual: <strong style="color:var(--tx2)">$${curBal.toFixed(2)}</strong> · Balance inicial: <strong style="color:var(--tx2)">$${cfg.balance.toFixed(2)}</strong></div>`;
 }
 
 // ── BACKUP / RESTORE ──
@@ -1613,7 +1673,13 @@ function exportCSV(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='eurusd_journal.csv';a.click();
 }
 
-// ── ANÁLISIS PSICOLÓGICO ──
+// ── BALANCE ACTUAL (base para riesgo) ──
+function getCurrentBalance(){
+  const closed=trades.filter(t=>t.status!=='open');
+  const totalPnl=closed.reduce((s,t)=>s+(parseFloat(t.pnl)||0),0);
+  return (cfg.balance||0)+totalPnl;
+}
+
 let aC1I=null,aC2I=null,aC3I=null,aC4I=null,aC5I=null,aC6I=null;
 
 function renderAnalisis(){
@@ -1624,7 +1690,7 @@ function renderAnalisis(){
   document.getElementById('analisis-content').style.display=psychTrades.length<MIN?'none':'block';
   if(psychTrades.length<MIN)return;
 
-  const rp=cfg.balance*cfg.risk/100; // risk per trade in $
+  const rp=getCurrentBalance()*cfg.risk/100; // risk per trade in $ (current balance)
 
   // ── HELPER ──
   function wrPnl(arr){

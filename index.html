@@ -640,7 +640,7 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
       <div class="fi"><label>Balance ($)</label><input type="number" id="cbal" placeholder="10000" oninput="calcRef()"></div>
       <div class="fi"><label>Riesgo %</label><input type="number" id="crisk" value="0.4" step="0.1" min="0.1" oninput="calcRef()"></div>
     </div>
-    <div class="comm-note">⚠ Comisión The5ers: $4 por lote round trip · La comisión es un costo ADICIONAL al riesgo — si el SL toca, pierdes el riesgo + la comisión</div>
+    <div class="comm-note">✓ Lotaje calculado incluyendo comisión — el costo total (pérdida SL + comisión) nunca supera tu riesgo configurado · Fórmula: Lotes = Riesgo$ / (SL×10 + $4)</div>
     <p style="font-size:11px;color:var(--tx3);margin:8px 0">Pip value EUR/USD ≈ $10 por lote estándar · Contract size: 100,000 · Min lot: 0.01 · Step: 0.01</p>
     <table class="rtbl">
       <thead><tr><th>SL (pips)</th><th>$ riesgo (si SL toca)</th><th>Lotes exacto</th><th>Lotes (↓)</th><th>Comisión adicional</th><th>Costo total si pierdo</th><th>% real cuenta</th></tr></thead>
@@ -767,36 +767,36 @@ let cfg={acct:'',balance:0,risk:0.4,ddD:2,ddW:4};
 let trades=[];
 let curRes=null, curEmo='', curExit=null;
 let curConv=null, curPens=null, curPostEmo=null, curProceso=null, curDesv=null, curPresion=null;
-let blv={1:null,2:null,3:null,4:null};
+let blv={'1':null,'2':null,'3':null,'4':null};
 let eqI=null, rrI=null, scI=null, convI=null, editIdx=null;
 
 const PENS_LABELS={
-  'ejecucion':'🎯 En modo ejecución',
-  'duda-setup':'🤔 Dudé pero el setup cumplía',
-  'exceso-confianza':'😎 Exceso de confianza',
-  'revanche':'😤 Quería recuperar pérdida',
-  'fomo':'⚡ FOMO — miedo a perder el movimiento',
-  'presion-inactivo':'😟 Presión por inactividad'
+  'ejecucion':'En modo ejecucion',
+  'duda-setup':'Dude pero el setup cumplia',
+  'exceso-confianza':'Exceso de confianza',
+  'revanche':'Queria recuperar perdida',
+  'fomo':'FOMO - miedo a perder el movimiento',
+  'presion-inactivo':'Presion por inactividad'
 };
 const POSTEMO_LABELS={
-  'satisfaccion':'😌 Satisfacción',
-  'alivio':'😮‍💨 Alivio',
-  'frustracion':'😤 Frustración',
-  'euforia':'🤩 Euforia',
-  'indiferencia':'😐 Indiferencia'
+  'satisfaccion':'Satisfaccion',
+  'alivio':'Alivio',
+  'frustracion':'Frustracion',
+  'euforia':'Euforia',
+  'indiferencia':'Indiferencia'
 };
 const PROCESO_LABELS={
-  'si':'✅ Sí completamente',
-  'parcial':'⚠️ Parcialmente',
-  'no':'❌ No — fuera del plan'
+  'si':'Si completamente',
+  'parcial':'Parcialmente',
+  'no':'No - fuera del plan'
 };
 const DESV_LABELS={
-  'movi-sl':'📍 Moví el SL',
-  'cierre-miedo':'😰 Cerré antes por miedo',
-  'sin-confirmacion':'⏩ Entré sin confirmación',
-  'aumente-size':'📈 Aumenté el tamaño',
-  'fomo-ejecucion':'⚡ Trade en modo FOMO',
-  'revanche-ejecucion':'😤 Trade en modo revanchismo'
+  'movi-sl':'Movi el SL',
+  'cierre-miedo':'Cerre antes por miedo',
+  'sin-confirmacion':'Entre sin confirmacion',
+  'aumente-size':'Aumente el tamano',
+  'fomo-ejecucion':'Trade en modo FOMO',
+  'revanche-ejecucion':'Trade en modo revanchismo'
 };
 
 function getStreakInfo(){
@@ -817,47 +817,6 @@ function getStreakInfo(){
   return {label:'Último trade: BE',type:'neutro'};
 }
 
-function setConv(val,btn){
-  curConv=val;
-  document.querySelectorAll('.conv-btn').forEach(b=>b.className='conv-btn');
-  const cls=val<=3?'sel-low':val<=6?'sel-mid':'sel-high';
-  btn.className='conv-btn '+cls;
-}
-function setPresion(val,btn){
-  curPresion=val;
-  document.querySelectorAll('#presion-grid .conv-btn').forEach(b=>b.className='conv-btn');
-  const cls=val<=2?'sel-high':val<=3?'sel-mid':'sel-low'; // inverted: low pressure = good
-  btn.className='conv-btn '+cls;
-}
-function setPens(val,btn){
-  curPens=val;
-  document.querySelectorAll('#pens-grid .psy-btn').forEach(b=>b.className='psy-btn');
-  const goodPens=['ejecucion'];
-  const warnPens=['duda-setup'];
-  const cls=goodPens.includes(val)?'sel':warnPens.includes(val)?'sel-warn':'sel-bad';
-  btn.className='psy-btn '+cls;
-}
-function setPostEmo(val,btn){
-  curPostEmo=val;
-  document.querySelectorAll('#post-emo-grid .psy-btn').forEach(b=>b.className='psy-btn');
-  const goodEmo=['satisfaccion','indiferencia'];
-  const warnEmo=['alivio','euforia'];
-  const cls=goodEmo.includes(val)?'sel':warnEmo.includes(val)?'sel-warn':'sel-bad';
-  btn.className='psy-btn '+cls;
-}
-function setProceso(val,btn){
-  curProceso=val;
-  document.querySelectorAll('#proceso-grid .psy-btn').forEach(b=>b.className='psy-btn');
-  const cls=val==='si'?'sel':val==='parcial'?'sel-warn':'sel-bad';
-  btn.className='psy-btn '+cls;
-  document.getElementById('desviacion-wrap').style.display=(val==='parcial'||val==='no')?'block':'none';
-}
-function setDesv(val,btn){
-  curDesv=val;
-  document.querySelectorAll('#desv-grid .psy-btn').forEach(b=>b.className='psy-btn sel-warn');
-  btn.className='psy-btn sel-bad';
-}
-
 function updateRachaDisplay(){
   const info=getStreakInfo();
   const el=document.getElementById('racha-display');
@@ -876,7 +835,8 @@ const EXITGOOD=['zona-estructura','trailing-stop','objetivo-rr','viernes-pm'];
 // ── SESIONES (Bogotá UTC-5) ──
 function getSess(t){
   if(!t) return null;
-  const[h,m]=[parseInt(t.split(':')[0]),parseInt(t.split(':')[1]||0)];
+  const h=parseInt(t.split(':')[0]);
+  const m=parseInt(t.split(':')[1]||0);
   const mins=h*60+m;
   if(mins>=420&&mins<960) return 'New York';   // 7:00-16:00
   if(mins>=1020||mins<120) return 'Asia';       // 17:00-2:00
@@ -926,6 +886,8 @@ function init(){
   setToday();
   if(!cfg.balance)openCfg();else renderAll();
 }
+
+
 function persist(){localStorage.setItem(SC,JSON.stringify(cfg));localStorage.setItem(ST,JSON.stringify(trades));}
 function setToday(){
   const now=new Date();
@@ -933,19 +895,24 @@ function setToday(){
   const ti=document.getElementById('tti');if(ti)ti.value=now.toTimeString().slice(0,5);
 }
 function sw(name,btn){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');btn.classList.add('active');
-  if(name==='overview')renderOverview();
-  if(name==='trades')renderList();
-  if(name==='form')updateRachaDisplay();
-  if(name==='analisis')renderAnalisis();
-  if(name==='calc'){
-    const curBal=getCurrentBalance();
-    document.getElementById('cbal').value=curBal.toFixed(2);
-    document.getElementById('crisk').value=cfg.risk;
-    calcRef();
-  }
+  try{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+    document.getElementById('tab-'+name).classList.add('active');
+    btn.classList.add('active');
+    if(name==='overview')try{renderOverview();}catch(e){console.error('renderOverview:',e);}
+    if(name==='trades')try{renderList();}catch(e){console.error('renderList:',e);}
+    if(name==='form')try{updateRachaDisplay();}catch(e){console.error('updateRacha:',e);}
+    if(name==='analisis')try{renderAnalisis();}catch(e){console.error('renderAnalisis:',e);}
+    if(name==='calc'){
+      try{
+        const curBal=getCurrentBalance();
+        document.getElementById('cbal').value=curBal.toFixed(2);
+        document.getElementById('crisk').value=cfg.risk;
+        calcRef();
+      }catch(e){console.error('calcRef:',e);}
+    }
+  }catch(e){console.error('sw:',e);}
 }
 function openCfg(){
   document.getElementById('cfgmodal').style.display='flex';
@@ -1046,7 +1013,9 @@ function getStats(){
   const allPnls=closed.filter(t=>parseFloat(t.pnl)!==0&&!isNaN(parseFloat(t.pnl))).map(t=>parseFloat(t.pnl));
   const avgPnl=allPnls.length?allPnls.reduce((a,b)=>a+b,0)/allPnls.length:0;
   const variance=allPnls.length>1?allPnls.reduce((s,v)=>s+Math.pow(v-avgPnl,2),0)/(allPnls.length-1):0;
-  const sharpe=Math.sqrt(variance)>0?avgPnl/Math.sqrt(variance):0;
+  const stdDev=Math.sqrt(variance);
+  // Require at least 10 trades and std > 1 to avoid meaningless values
+  const sharpe=(allPnls.length>=10&&stdDev>1)?avgPnl/stdDev:null;
   // Days
   const today=new Date().toISOString().split('T')[0];
   const mon=getMonday();
@@ -1118,17 +1087,17 @@ function renderOverview(){
     <div class="kpi"><div class="kpi-lbl">P&L semana</div><div class="kpi-val ${s.wkPnl>=0?'pos':'neg'}">${s.wkPnl>=0?'+':''}$${s.wkPnl.toFixed(2)}</div></div>
     <div class="kpi"><div class="kpi-lbl">P&L total</div><div class="kpi-val ${s.totalPnl>=0?'pos':'neg'}">${s.totalPnl>=0?'+':''}$${s.totalPnl.toFixed(2)}</div></div>
     <div class="kpi"><div class="kpi-lbl">Win rate</div><div class="kpi-val">${(s.wr*100).toFixed(1)}%</div><div class="kpi-sub">${s.wins}W · ${s.losses}L · ${s.bes}BE</div></div>
-    <div class="kpi"><div class="kpi-lbl">RR promedio real</div><div class="kpi-val ${s.avgRRall>=0?'pos':'neg'}">${s.avgRRall.toFixed(2)}R</div><div class="kpi-sub">Todos los trades</div></div>
-    <div class="kpi"><div class="kpi-lbl">RR promedio ganadores</div><div class="kpi-val pos">${s.avgRRwins.toFixed(2)}R</div><div class="kpi-sub">Solo WIN</div></div>
-    <div class="kpi"><div class="kpi-lbl">Expected value</div><div class="kpi-val ${s.evR>=0?'pos':'neg'}">${s.evR>=0?'+':''}${s.evR.toFixed(2)}R</div><div class="kpi-sub">${s.evR>=0?'+':''}$${s.evUSD.toFixed(2)} · (WR×RR)−(LR×1)</div></div>
-    <div class="kpi"><div class="kpi-lbl">Sharpe ratio</div><div class="kpi-val ${s.sharpe>=1?'pos':s.sharpe<0?'neg':''}">${s.total>=2?s.sharpe.toFixed(2):'—'}</div><div class="kpi-sub">${s.total>=2?(s.sharpe>=2?'Excelente':s.sharpe>=1?'Bueno':s.sharpe>=0?'Aceptable':'Negativo'):'Mín. 2 trades'}</div></div>
+    <div class="kpi"><div class="kpi-lbl">RR promedio real</div><div class="kpi-val ${s.avgRRall>=0?'pos':'neg'}">${(s.avgRRall||0).toFixed(2)}R</div><div class="kpi-sub">Todos los trades</div></div>
+    <div class="kpi"><div class="kpi-lbl">RR promedio ganadores</div><div class="kpi-val pos">${(s.avgRRwins||0).toFixed(2)}R</div><div class="kpi-sub">Solo WIN</div></div>
+    <div class="kpi"><div class="kpi-lbl">Expected value</div><div class="kpi-val ${s.evR>=0?'pos':'neg'}">${s.evR>=0?'+':''}${(s.evR||0).toFixed(2)}R</div><div class="kpi-sub">${s.evR>=0?'+':''}$${(s.evUSD||0).toFixed(2)} · (WR×RR)−(LR×1)</div></div>
+    <div class="kpi"><div class="kpi-lbl">Sharpe ratio</div><div class="kpi-val ${s.sharpe!==null?(s.sharpe>=1?'pos':s.sharpe<0?'neg':''):''}">${s.sharpe!==null?s.sharpe.toFixed(2):'—'}</div><div class="kpi-sub">${s.sharpe!==null?(s.sharpe>=2?'Excelente':s.sharpe>=1?'Bueno':s.sharpe>=0?'Aceptable':'Negativo'):'Mín. 10 trades'}</div></div>
   `;
   document.getElementById('statslist').innerHTML=`
     <div class="sr"><span class="sl2">Trades cerrados</span><span class="sv">${s.total}</span></div>
     <div class="sr"><span class="sl2">Trades en curso</span><span class="sv" style="color:${s.openCount>0?'var(--am)':'inherit'}">${s.openCount}</span></div>
     <div class="sr"><span class="sl2">Buy / Sell</span><span class="sv">${trades.filter(t=>t.dir==='Buy'&&t.status!=='open').length} / ${trades.filter(t=>t.dir==='Sell'&&t.status!=='open').length}</span></div>
-    <div class="sr"><span class="sl2">Promedio cuando gana</span><span class="sv" style="color:var(--gr)">+$${s.avgW.toFixed(2)}</span></div>
-    <div class="sr"><span class="sl2">Promedio cuando pierde</span><span class="sv" style="color:var(--rd)">$${s.avgL.toFixed(2)}</span></div>
+    <div class="sr"><span class="sl2">Promedio cuando gana</span><span class="sv" style="color:var(--gr)">+$${(s.avgW||0).toFixed(2)}</span></div>
+    <div class="sr"><span class="sl2">Promedio cuando pierde</span><span class="sv" style="color:var(--rd)">$${(s.avgL||0).toFixed(2)}</span></div>
     <div class="sr"><span class="sl2">RR gap promedio</span><span class="sv" style="color:${s.avgGap>1?'var(--am)':'var(--gr)'}">${s.gapsArr.length?s.avgGap.toFixed(2)+'R dejado':'Sin datos MFE'}</span></div>
   `;
   // Exit stats
@@ -1600,10 +1569,13 @@ function calcRef(){
   const rAmt=bal*risk/100;
   const SLS=[5,7,10,12,15,17,20,25,30,35,40,50];
   document.getElementById('reftbody').innerHTML=SLS.map(sl=>{
-    const lots=rAmt/(sl*10);
+    // Commission-inclusive: lots = rAmt / (sl×10 + 4)
+    // Guarantees total cost (SL loss + commission) ≤ rAmt
+    const lots=rAmt/(sl*10+4);
     const rounded=Math.floor(lots*100)/100;
     const comm=4*rounded;
-    const totalRisk=rAmt+comm;
+    const slLoss=rounded*sl*10;
+    const totalRisk=slLoss+comm;
     const totalPctCur=curBal?totalRisk/curBal*100:0;
     const totalPctIni=cfg.balance?totalRisk/cfg.balance*100:0;
     return `<tr><td>${sl}</td><td>$${rAmt.toFixed(2)}</td><td>${lots.toFixed(4)}</td><td>${rounded.toFixed(2)}</td><td style="color:var(--am)">+$${comm.toFixed(2)}</td><td style="color:var(--rd);font-weight:600">$${totalRisk.toFixed(2)}</td><td style="color:var(--tx3);font-size:11px">${totalPctCur.toFixed(3)}% actual<br><span style="color:var(--tx3);opacity:.6">${totalPctIni.toFixed(3)}% inicial</span></td></tr>`;
@@ -1617,17 +1589,19 @@ function calcCustom(){
   const out=document.getElementById('customout');
   if(!sl||!bal){out.innerHTML='<span style="color:var(--tx3)">Ingresa el SL para calcular</span>';return;}
   const rAmt=bal*risk/100;
-  const lots=rAmt/(sl*10);
+  // Commission-inclusive: lots = rAmt / (sl×10 + 4)
+  const lots=rAmt/(sl*10+4);
   const rounded=Math.floor(lots*100)/100;
   const comm=4*rounded;
-  const totalRisk=rAmt+comm;
+  const slLoss=rounded*sl*10;
+  const totalRisk=slLoss+comm;
   const totalPctCur=curBal?totalRisk/curBal*100:0;
   const totalPctIni=cfg.balance?totalRisk/cfg.balance*100:0;
   out.innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotaje exacto</div><div style="font-size:24px;font-weight:600;color:var(--gr)">${lots.toFixed(4)}</div></div>
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotes redondeados (↓)</div><div style="font-size:24px;font-weight:600;color:var(--tx)">${rounded.toFixed(2)}</div></div>
-    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">$ riesgo (si SL toca)</div><div style="font-size:24px;font-weight:600;color:var(--am)">$${rAmt.toFixed(2)}</div></div>
-    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Comisión adicional</div><div style="font-size:24px;font-weight:600;color:var(--am)">+$${comm.toFixed(2)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Riesgo máx. (límite)</div><div style="font-size:24px;font-weight:600;color:var(--am)">$${rAmt.toFixed(2)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Comisión incluida</div><div style="font-size:24px;font-weight:600;color:var(--am)">$${comm.toFixed(2)}</div></div>
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Costo total si pierdo</div><div style="font-size:24px;font-weight:600;color:var(--rd)">$${totalRisk.toFixed(2)}</div></div>
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% balance actual</div><div style="font-size:24px;font-weight:600;color:var(--tx3)">${totalPctCur.toFixed(3)}%</div></div>
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% balance inicial</div><div style="font-size:20px;font-weight:600;color:var(--tx3);opacity:.6">${totalPctIni.toFixed(3)}%</div></div>
@@ -2001,6 +1975,9 @@ ${fomo.n>=3&&fomo.wr<50?'· Trabajar gestión del FOMO — costo medible\n':''}$
   a.download=`reporte_performance_${new Date().toISOString().split('T')[0]}.txt`;
   a.click();
 }
+
+
+init();
 
 </script>
 </body>

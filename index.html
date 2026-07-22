@@ -450,6 +450,35 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
     </div>
   </div>
 
+  <!-- BLOQUE 5 — SWAP -->
+  <div class="blk locked" id="bc5b">
+    <div class="bh">
+      <div class="bt2"><div class="bnum lk" id="bn5b">5</div> Swap</div>
+      <span class="bsc" id="bs5b">— pts</span>
+    </div>
+    <p style="font-size:12px;color:var(--tx3);margin-bottom:10px;font-style:italic">¿El swap favorece o penaliza mantener la posición?</p>
+    <div class="lw">
+      <button class="lb" id="b5b-s" onclick="setLv('5b','s',this)"><span>Swap positivo — favorable mantener la posición overnight</span><span class="pt">10 pts</span></button>
+      <button class="lb" id="b5b-n" onclick="setLv('5b','n',this)"><span>Swap negativo — salir el mismo día preferiblemente</span><span class="pt">0 pts</span></button>
+    </div>
+    <div id="swap-warning" style="display:none;margin-top:10px;background:var(--amb);border:1px solid var(--am);border-radius:var(--ra);padding:10px 14px;font-size:12.5px;color:var(--am)">
+      Swap negativo — si no puedes cerrar hoy, el costo de financiamiento reducira tu P&L. Prioriza cierre intraday.
+    </div>
+  </div>
+
+  <!-- BLOQUE 6 — SL MINIMO -->
+  <div class="blk locked" id="bc6">
+    <div class="bh">
+      <div class="bt2"><div class="bnum lk" id="bn6">6</div> SL minimo — 2 pips</div>
+      <span class="bsc" id="bs6">— pts</span>
+    </div>
+    <p style="font-size:12px;color:var(--tx3);margin-bottom:10px;font-style:italic">¿El Stop Loss tiene al menos 2 pips de distancia?</p>
+    <div class="lw">
+      <button class="lb" id="b6-s" onclick="setLv(6,'s',this)"><span>SL mayor o igual a 2 pips — trade valido</span><span class="pt">10 pts</span></button>
+      <button class="lb" id="b6-n" onclick="setLv(6,'n',this)"><span>SL menor a 2 pips — descartar el trade</span><span class="pt">0 pts · Bloquea</span></button>
+    </div>
+  </div>
+
   <!-- REGISTRO -->
   <div class="blk locked" id="bcreg">
     <div class="bh"><div class="bt2"><div class="bnum lk" id="bnreg">R</div> Registro del trade</div></div>
@@ -640,20 +669,26 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
       <div class="fi"><label>Balance ($)</label><input type="number" id="cbal" placeholder="10000" oninput="calcRef()"></div>
       <div class="fi"><label>Riesgo %</label><input type="number" id="crisk" value="0.4" step="0.1" min="0.1" oninput="calcRef()"></div>
     </div>
-    <div class="comm-note">✓ Lotaje calculado incluyendo comisión — el costo total (pérdida SL + comisión) nunca supera tu riesgo configurado · Fórmula: Lotes = Riesgo$ / (SL×10 + $4)</div>
-    <p style="font-size:11px;color:var(--tx3);margin:8px 0">Pip value EUR/USD ≈ $10 por lote estándar · Contract size: 100,000 · Min lot: 0.01 · Step: 0.01</p>
+    <div class="comm-note">✓ Lotaje incluye comisión — costo total nunca supera el riesgo configurado · SL mínimo recomendado: 2 pips · Pip value = $10/lote</div>
+    <p style="font-size:11px;color:var(--tx3);margin:8px 0">EUR/USD · Contract size: 100,000 · Min lot: 0.01 · Step: 0.01 · Comisión: $4/lote RT</p>
     <table class="rtbl">
-      <thead><tr><th>SL (pips)</th><th>$ riesgo (si SL toca)</th><th>Lotes exacto</th><th>Lotes (↓)</th><th>Comisión adicional</th><th>Costo total si pierdo</th><th>% real cuenta</th></tr></thead>
+      <thead><tr><th>SL (pips)</th><th>$ riesgo</th><th>Lotes exacto</th><th>Lotes (↓)</th><th>Comisión</th><th>Costo total</th><th>% cuenta</th></tr></thead>
       <tbody id="reftbody"></tbody>
     </table>
   </div>
   <div class="card">
     <div class="card-ttl">Cálculo personalizado</div>
-    <div class="fr">
-      <div class="fi"><label>SL exacto (pips)</label><input type="number" id="csl" placeholder="12.5" step="0.5" oninput="calcCustom()"></div>
-      <div class="fi"><label>Riesgo % (override)</label><input type="number" id="crisk2" placeholder="0.4" step="0.1" oninput="calcCustom()"></div>
+    <div class="fr" style="margin-bottom:10px">
+      <div class="fi">
+        <label>SL en pips</label>
+        <input type="number" id="csl" placeholder="5" step="0.5" min="2" oninput="calcCustom()">
+      </div>
+      <div class="fi">
+        <label>Riesgo % (override)</label>
+        <input type="number" id="crisk2" placeholder="0.4" step="0.1" oninput="calcCustom()">
+      </div>
     </div>
-    <div id="customout" style="color:var(--tx3);font-size:13px;margin-top:4px">Ingresa el SL para calcular</div>
+    <div id="customout" style="color:var(--tx3);font-size:13px;margin-top:4px">Ingresa el SL en pips para calcular</div>
   </div>
 </div>
 </div>
@@ -767,7 +802,7 @@ let cfg={acct:'',balance:0,risk:0.4,ddD:2,ddW:4};
 let trades=[];
 let curRes=null, curEmo='', curExit=null;
 let curConv=null, curPens=null, curPostEmo=null, curProceso=null, curDesv=null, curPresion=null;
-let blv={'1':null,'2':null,'3':null,'4':null};
+let blv={'1':null,'2':null,'3':null,'4':null,'5b':null,'6':null};
 let eqI=null, rrI=null, scI=null, convI=null, editIdx=null;
 
 const PENS_LABELS={
@@ -828,7 +863,7 @@ function updateRachaDisplay(){
   el.style.background=bg;
 }
 const ETIPS={ENFOCADO:'Estado óptimo — ejecuta el plan sin improvisar.',NEUTRO:'Aceptable — sé muy selectivo con los setups hoy.',ANSIOSO:'Reduce el tamaño de la posición al 50% hoy.',FRUSTRADO:'Considera no operar hoy. Preserva el capital.',CANSADO:'Fatiga afecta el juicio — solo setups A+, sin forzar.'};
-const BLBL={1:'Contexto W1/D1',2:'Confirmación 4H/1H',3:'Entrada 5M/1M',4:'Riesgo'};
+const BLBL={1:'Contexto W1/D1',2:'Confirmacion 4H/1H',3:'Entrada 5M/1M',4:'Riesgo','5b':'Swap',6:'SL minimo 2 pips'};
 const EXITLBL={'zona-estructura':'Zona de estructura opuesta','trailing-stop':'Trailing stop','objetivo-rr':'Objetivo RR alcanzado','cierre-emocional':'Cierre emocional/anticipado','noticia':'Noticia alto impacto','viernes-pm':'Viernes PM','sl-tocado':'SL tocado','be-manual':'Breakeven manual'};
 const EXITGOOD=['zona-estructura','trailing-stop','objetivo-rr','viernes-pm'];
 
@@ -846,34 +881,55 @@ function getSess(t){
 
 // ── CHECKLIST CON SCORE ──
 function setLv(b,lv,btn){
-  blv[b]=lv;
-  ['s','w','n'].forEach(l=>{const el=document.getElementById('b'+b+'-'+l);if(el)el.className='lb';});
+  const bStr=String(b);
+  blv[bStr]=lv;
+  ['s','w','n'].forEach(l=>{const el=document.getElementById('b'+bStr+'-'+l);if(el)el.className='lb';});
   btn.className='lb '+(lv==='s'?'ss':lv==='w'?'sw2':'sn2');
-  const pts=lv==='s'?20:lv==='w'?10:0;
-  const bsEl=document.getElementById('bs'+b);
-  bsEl.textContent=pts+' pts';
-  bsEl.className='bsc'+(lv==='w'?' sw':lv==='n'?' sz':'');
-  document.getElementById('bn'+b).className='bnum';
-  if(lv==='n'){for(let i=b+1;i<=4;i++)lockB(i);lockB('reg');lockB(5);}
-  else{if(b<4)unlockB(b+1);else{unlockB('reg');unlockB(5);}}
+  const maxPts={'1':20,'2':20,'3':20,'4':20,'5b':10,'6':10};
+  const max=maxPts[bStr]||20;
+  const pts=lv==='s'?max:lv==='w'?Math.round(max/2):0;
+  const bsEl=document.getElementById('bs'+bStr);
+  if(bsEl){bsEl.textContent=pts+' pts';bsEl.className='bsc'+(lv==='w'?' sw':lv==='n'?' sz':'');}
+  const bnEl=document.getElementById('bn'+bStr);
+  if(bnEl)bnEl.className='bnum';
+  // Swap warning — no bloquea, solo avisa
+  if(bStr==='5b'){
+    const sw=document.getElementById('swap-warning');
+    if(sw)sw.style.display=lv==='n'?'block':'none';
+    // Always unlock next regardless of swap result
+    unlockB('6');
+    updateScore();
+    return;
+  }
+  // Unlock chain for blocks 1-4 and 6: 1→2→3→4→5b→6→reg→tipo salida
+  const chain=['1','2','3','4','5b','6','reg','5'];
+  const idx=chain.indexOf(bStr);
+  if(lv==='n'){for(let i=idx+1;i<chain.length;i++){const id=chain[i];lockB(id==='reg'?'reg':id);}}
+  else{if(idx+1<chain.length){const nxt=chain[idx+1];unlockB(nxt==='reg'?'reg':nxt);}}
   updateScore();
 }
 
 function updateScore(){
-  const pts={s:20,w:10,n:0};
+  const maxPts={'1':20,'2':20,'3':20,'4':20,'5b':10,'6':10};
   const hasN=Object.values(blv).some(v=>v==='n');
   const filled=Object.values(blv).filter(v=>v!==null).length;
-  const total=hasN?0:Object.values(blv).reduce((s,v)=>s+(v?pts[v]:0),0);
+  const total=hasN?0:Object.entries(blv).reduce((s,[k,v])=>{
+    if(!v)return s;
+    const m=maxPts[k]||0;
+    return s+(v==='s'?m:v==='w'?Math.round(m/2):0);
+  },0);
   const el=document.getElementById('sd-big');
   const bar=document.getElementById('sd-bar');
   const lbl=document.getElementById('sd-lbl');
   if(filled===0){el.textContent='—';bar.style.width='0%';lbl.textContent='Completa el checklist para obtener el score del setup';return;}
   el.textContent=total;
-  const pct=total/80*100;
-  bar.style.width=pct+'%';
-  el.className='sd-big'+(total>=60?'':total>=40?' m':' lo');
-  bar.className='sd-bf'+(total>=60?'':total>=40?' m':' lo');
-  lbl.textContent=hasN?'Setup inválido — no operar':total===80?'Score A+ — condiciones óptimas':total>=60?'Setup sólido — operable':total>=40?'Setup débil — considera reducir tamaño':'Setup muy débil';
+  bar.style.width=total+'%'; // max is 100
+  el.className='sd-big'+(total>=70?'':total>=50?' m':' lo');
+  bar.className='sd-bf'+(total>=70?'':total>=50?' m':' lo');
+  lbl.textContent=hasN?'Setup invalido — no operar':
+    total===100?'Score A+ 100/100 — condiciones optimas':
+    total>=70?'Setup solido — operable':
+    total>=50?'Setup debil — considera reducir tamano':'Setup muy debil';
 }
 
 function lockB(id){const el=document.getElementById('bc'+id);if(el)el.classList.add('locked');const bn=document.getElementById('bn'+id);if(bn)bn.className='bnum lk';}
@@ -1037,7 +1093,7 @@ function getStats(){
   const ddFP=peak>0?Math.max(0,(peak-curBal)/peak*100):0;
   const ddFPa=Math.max(0,peak-curBal);
   const sb={lo:[],mi:[],hi:[]};
-  closed.forEach(t=>{if(t.scoreTotal==null)return;const w=t.result==='WIN'?1:0;if(t.scoreTotal<40)sb.lo.push(w);else if(t.scoreTotal<60)sb.mi.push(w);else sb.hi.push(w);});
+  closed.forEach(t=>{if(t.scoreTotal==null)return;const w=t.result==='WIN'?1:0;if(t.scoreTotal<50)sb.lo.push(w);else if(t.scoreTotal<75)sb.mi.push(w);else sb.hi.push(w);});
   const wrS=k=>sb[k].length?sb[k].reduce((a,b)=>a+b,0)/sb[k].length*100:0;
   const pF=closed.filter(t=>t.execPlan==='Sí, sin desviaciones').length;
   const pD=closed.filter(t=>t.execPlan&&t.execPlan.startsWith('No')).length;
@@ -1150,7 +1206,7 @@ function renderRRG(s){
 }
 function renderSC(s){
   const ctx=document.getElementById('scoreC');if(scI)scI.destroy();
-  scI=new Chart(ctx,{type:'bar',data:{labels:['< 40','40-59','60-80'],datasets:[{data:[s.wrS('lo'),s.wrS('mi'),s.wrS('hi')],backgroundColor:'#1DB87A',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5C6480',font:{size:10}},grid:{display:false}},y:{max:100,ticks:{color:'#5C6480',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+  scI=new Chart(ctx,{type:'bar',data:{labels:['< 50','50-74','75-100'],datasets:[{data:[s.wrS('lo'),s.wrS('mi'),s.wrS('hi')],backgroundColor:'#1DB87A',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5C6480',font:{size:10}},grid:{display:false}},y:{max:100,ticks:{color:'#5C6480',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}}}}});
 }
 
 function renderPsychOverview(s){
@@ -1237,7 +1293,7 @@ function renderList(){
       <td style="color:var(--tx3)">${ri+1}</td>
       <td>${t.di||'—'}</td>
       <td style="font-weight:600;color:${t.dir==='Buy'?'var(--gr)':'var(--bl)'}">${t.dir||'—'}</td>
-      <td style="font-weight:600;color:${sc!=null?scCol:'var(--tx3)'}">${sc!=null?sc+'/80':'—'}</td>
+      <td style="font-weight:600;color:${sc!=null?scCol:'var(--tx3)'}">${sc!=null?sc+'/100':'—'}</td>
       <td>${t.rrPlan!=null?t.rrPlan.toFixed(2):'—'}</td>
       <td style="color:${t.rrFinal!=null?(t.rrFinal>=0?'var(--gr)':'var(--rd)'):'inherit'}">${t.rrFinal!=null?t.rrFinal.toFixed(2):'—'}</td>
       <td style="color:${gap!=='—'&&parseFloat(gap)>0.5?'var(--am)':'var(--gr)'}">${gap}</td>
@@ -1482,8 +1538,9 @@ function saveTrade(mode='complete'){
   const lot=parseFloat(document.getElementById('tlot').value)||0;
   const dm=dir==='Buy'?1:-1;
   const rd=(entry&&sl)?Math.abs(entry-sl):null;
+  const maxPts={'1':20,'2':20,'3':20,'4':20,'5b':10,'6':10};
   const hasN=Object.values(blv).some(v=>v==='n');
-  const scoreTotal=Object.values(blv).some(v=>v!==null)?(hasN?0:Object.values(blv).reduce((s,v)=>s+(v?{s:20,w:10,n:0}[v]:0),0)):null;
+  const scoreTotal=Object.values(blv).some(v=>v!==null)?(hasN?0:Object.entries(blv).reduce((s,[k,v])=>{if(!v)return s;const m=maxPts[k]||0;return s+(v==='s'?m:v==='w'?Math.round(m/2):0);},0)):null;
   trades.push({
     id:Date.now(),status:mode,dir,lot:document.getElementById('tlot').value,
     di,ti:time,do_:document.getElementById('tdo').value,
@@ -1533,7 +1590,7 @@ function resetForm(){
   ['tdir','tlot','tdi','tti','tdo','pentry','psl','ptp','pmfe','pmae','pclose','tpnl','tss','tnotes','tnc','slept','rplan','bias','news','nopen','ttook','cf-result','cf-rr','exec-plan','exec-note'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   curRes=null;curEmo='';curExit=null;
   curConv=null;curPens=null;curPostEmo=null;curProceso=null;curDesv=null;curPresion=null;
-  blv={1:null,2:null,3:null,4:null};
+  blv={'1':null,'2':null,'3':null,'4':null,'5b':null,'6':null};
   ['rwin','rloss','rbe'].forEach(id=>document.getElementById(id).className='rb');
   document.querySelectorAll('.eb').forEach(b=>b.classList.remove('esel'));
   document.querySelectorAll('.lb').forEach(b=>b.className='lb');
@@ -1546,13 +1603,14 @@ function resetForm(){
   document.getElementById('cfbox').style.display='none';
   document.getElementById('exec-note-wrap').style.display='none';
   ['out-rrplan','out-rrfinal','out-mfe','out-mae','out-rrgap','out-pnl','out-comm','out-net','out-session'].forEach(id=>document.getElementById(id).textContent='—');
-  ['bs1','bs2','bs3','bs4'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent='— pts';e.className='bsc';}});
+  ['bs1','bs2','bs3','bs4','bs5b','bs6'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent='— pts';e.className='bsc';}});
   document.getElementById('sd-big').textContent='—';
   document.getElementById('sd-big').className='sd-big';
   document.getElementById('sd-bar').style.width='0%';
   document.getElementById('sd-lbl').textContent='Completa el checklist para obtener el score del setup';
   for(let i=1;i<=4;i++){document.getElementById('bn'+i).className=i===1?'bnum':'bnum lk';}
-  for(let i=2;i<=4;i++)lockB(i);lockB('reg');lockB(5);
+  for(let i=2;i<=4;i++)lockB(String(i));lockB('5b');lockB('6');lockB('reg');lockB('5');
+  const sw=document.getElementById('swap-warning');if(sw)sw.style.display='none';
   setToday();
 }
 
@@ -1561,52 +1619,59 @@ function calcRef(){
   const curBal=getCurrentBalance();
   const bal=parseFloat(document.getElementById('cbal').value)||curBal||0;
   const risk=parseFloat(document.getElementById('crisk').value)||cfg.risk||0.4;
-  // Update display
   const elCur=document.getElementById('calc-bal-cur');
   const elIni=document.getElementById('calc-bal-ini');
   if(elCur)elCur.textContent='$'+curBal.toLocaleString('en-US',{minimumFractionDigits:2});
   if(elIni)elIni.textContent='$'+(cfg.balance||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const rAmt=bal*risk/100;
-  const SLS=[5,7,10,12,15,17,20,25,30,35,40,50];
-  document.getElementById('reftbody').innerHTML=SLS.map(sl=>{
-    // Commission-inclusive: lots = rAmt / (sl×10 + 4)
-    // Guarantees total cost (SL loss + commission) ≤ rAmt
-    const lots=rAmt/(sl*10+4);
+  // Pips from 2 to 30, stepping by 2
+  const SLS=[2,4,6,8,10];
+  document.getElementById('reftbody').innerHTML=SLS.map(pip=>{
+    // Commission-inclusive: lots = rAmt / (pip×10 + 4)
+    const lots=rAmt/(pip*10+4);
     const rounded=Math.floor(lots*100)/100;
     const comm=4*rounded;
-    const slLoss=rounded*sl*10;
+    const slLoss=rounded*pip*10;
     const totalRisk=slLoss+comm;
     const totalPctCur=curBal?totalRisk/curBal*100:0;
-    const totalPctIni=cfg.balance?totalRisk/cfg.balance*100:0;
-    return `<tr><td>${sl}</td><td>$${rAmt.toFixed(2)}</td><td>${lots.toFixed(4)}</td><td>${rounded.toFixed(2)}</td><td style="color:var(--am)">+$${comm.toFixed(2)}</td><td style="color:var(--rd);font-weight:600">$${totalRisk.toFixed(2)}</td><td style="color:var(--tx3);font-size:11px">${totalPctCur.toFixed(3)}% actual<br><span style="color:var(--tx3);opacity:.6">${totalPctIni.toFixed(3)}% inicial</span></td></tr>`;
+    return `<tr>
+      <td style="font-weight:600">${pip}</td>
+      <td>$${rAmt.toFixed(2)}</td>
+      <td>${lots.toFixed(4)}</td>
+      <td>${rounded.toFixed(2)}</td>
+      <td style="color:var(--am)">+$${comm.toFixed(2)}</td>
+      <td style="color:var(--rd);font-weight:600">$${totalRisk.toFixed(2)}</td>
+      <td style="color:var(--tx3);font-size:11px">${totalPctCur.toFixed(3)}%</td>
+    </tr>`;
   }).join('');
 }
 function calcCustom(){
   const curBal=getCurrentBalance();
   const bal=parseFloat(document.getElementById('cbal').value)||curBal||0;
-  const sl=parseFloat(document.getElementById('csl').value);
+  const pip=parseFloat(document.getElementById('csl').value);
   const risk=parseFloat(document.getElementById('crisk2').value)||cfg.risk||0.4;
   const out=document.getElementById('customout');
-  if(!sl||!bal){out.innerHTML='<span style="color:var(--tx3)">Ingresa el SL para calcular</span>';return;}
+  if(!pip||!bal){out.innerHTML='<span style="color:var(--tx3)">Ingresa el SL en pips para calcular</span>';return;}
+  if(pip<2){out.innerHTML='<div style="background:var(--rdb);border:1px solid var(--rd);border-radius:var(--ra);padding:10px 14px;color:var(--rd);font-size:13px;font-weight:500">SL menor a 2 pips — trade descartado segun checklist (Bloque 6)</div>';return;}
   const rAmt=bal*risk/100;
-  // Commission-inclusive: lots = rAmt / (sl×10 + 4)
-  const lots=rAmt/(sl*10+4);
+  const lots=rAmt/(pip*10+4);
   const rounded=Math.floor(lots*100)/100;
   const comm=4*rounded;
-  const slLoss=rounded*sl*10;
+  const slLoss=rounded*pip*10;
   const totalRisk=slLoss+comm;
   const totalPctCur=curBal?totalRisk/curBal*100:0;
   const totalPctIni=cfg.balance?totalRisk/cfg.balance*100:0;
-  out.innerHTML=`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">
+  out.innerHTML=`
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotaje exacto</div><div style="font-size:24px;font-weight:600;color:var(--gr)">${lots.toFixed(4)}</div></div>
-    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotes redondeados (↓)</div><div style="font-size:24px;font-weight:600;color:var(--tx)">${rounded.toFixed(2)}</div></div>
-    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Riesgo máx. (límite)</div><div style="font-size:24px;font-weight:600;color:var(--am)">$${rAmt.toFixed(2)}</div></div>
-    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Comisión incluida</div><div style="font-size:24px;font-weight:600;color:var(--am)">$${comm.toFixed(2)}</div></div>
-    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Costo total si pierdo</div><div style="font-size:24px;font-weight:600;color:var(--rd)">$${totalRisk.toFixed(2)}</div></div>
-    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% balance actual</div><div style="font-size:24px;font-weight:600;color:var(--tx3)">${totalPctCur.toFixed(3)}%</div></div>
-    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% balance inicial</div><div style="font-size:20px;font-weight:600;color:var(--tx3);opacity:.6">${totalPctIni.toFixed(3)}%</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotes (baja)</div><div style="font-size:24px;font-weight:600;color:var(--tx)">${rounded.toFixed(2)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Riesgo max.</div><div style="font-size:24px;font-weight:600;color:var(--am)">$${rAmt.toFixed(2)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Comision RT</div><div style="font-size:24px;font-weight:600;color:var(--am)">+$${comm.toFixed(2)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Costo total</div><div style="font-size:24px;font-weight:600;color:var(--rd)">$${totalRisk.toFixed(2)}</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% bal. actual</div><div style="font-size:22px;font-weight:600;color:var(--tx3)">${totalPctCur.toFixed(3)}%</div></div>
+    <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% bal. inicial</div><div style="font-size:18px;font-weight:600;color:var(--tx3);opacity:.6">${totalPctIni.toFixed(3)}%</div></div>
   </div>
-  <div style="margin-top:8px;font-size:11px;color:var(--tx3)">Balance actual: <strong style="color:var(--tx2)">$${curBal.toFixed(2)}</strong> · Balance inicial: <strong style="color:var(--tx2)">$${cfg.balance.toFixed(2)}</strong></div>`;
+  <div style="margin-top:8px;font-size:11px;color:var(--tx3)">Balance actual: <strong style="color:var(--tx2)">$${curBal.toFixed(2)}</strong> · Balance inicial: <strong style="color:var(--tx2)">$${(cfg.balance||0).toFixed(2)}</strong></div>`;
 }
 
 // ── BACKUP / RESTORE ──

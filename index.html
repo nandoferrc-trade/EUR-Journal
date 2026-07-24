@@ -659,36 +659,32 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
 <!-- ═══ CALCULADORA ═══ -->
 <div class="tab" id="tab-calc">
 <div style="max-width:560px">
+  <!-- CÁLCULO PERSONALIZADO — arriba -->
   <div class="card">
-    <div class="card-ttl">Parámetros — EUR/USD · The5ers</div>
+    <div class="card-ttl">Cálculo personalizado</div>
     <div style="display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap">
       <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Balance actual (base del riesgo)</div><div style="font-size:18px;font-weight:600;color:var(--gr)" id="calc-bal-cur">—</div></div>
       <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Balance inicial (referencia drawdown)</div><div style="font-size:18px;font-weight:600;color:var(--tx2)" id="calc-bal-ini">—</div></div>
     </div>
+    <div class="fr" style="margin-bottom:10px">
+      <div class="fi"><label>SL técnico (pips)</label><input type="number" id="csl" placeholder="5" step="0.5" min="2" oninput="calcCustom()"></div>
+      <div class="fi"><label>Riesgo % (override)</label><input type="number" id="crisk2" placeholder="0.4" step="0.1" oninput="calcCustom()"></div>
+    </div>
+    <div class="comm-note">✓ El SL técnico que ingresas ya incluye el buffer de comisión automáticamente · Comisión $4/lote = 0.4 pips equivalentes · SL mínimo: 2 pips</div>
+    <div id="customout" style="color:var(--tx3);font-size:13px;margin-top:10px">Ingresa el SL en pips para calcular</div>
+  </div>
+  <!-- TABLA DE REFERENCIA RÁPIDA — abajo -->
+  <div class="card">
+    <div class="card-ttl">Tabla de referencia rápida — EUR/USD · The5ers</div>
     <div class="fr" style="margin-bottom:6px">
       <div class="fi"><label>Balance ($)</label><input type="number" id="cbal" placeholder="10000" oninput="calcRef()"></div>
       <div class="fi"><label>Riesgo %</label><input type="number" id="crisk" value="0.4" step="0.1" min="0.1" oninput="calcRef()"></div>
     </div>
-    <div class="comm-note">✓ Lotaje incluye comisión — costo total nunca supera el riesgo configurado · SL mínimo recomendado: 2 pips · Pip value = $10/lote</div>
-    <p style="font-size:11px;color:var(--tx3);margin:8px 0">EUR/USD · Contract size: 100,000 · Min lot: 0.01 · Step: 0.01 · Comisión: $4/lote RT</p>
+    <p style="font-size:11px;color:var(--tx3);margin:6px 0 8px">EUR/USD · Contract size: 100,000 · Min lot: 0.01 · Step: 0.01 · Comisión: $4/lote RT · Pip value = $10/lote</p>
     <table class="rtbl">
       <thead><tr><th>SL (pips)</th><th>$ riesgo</th><th>Lotes exacto</th><th>Lotes (↓)</th><th>Comisión</th><th>Costo total</th><th>% cuenta</th></tr></thead>
       <tbody id="reftbody"></tbody>
     </table>
-  </div>
-  <div class="card">
-    <div class="card-ttl">Cálculo personalizado</div>
-    <div class="fr" style="margin-bottom:10px">
-      <div class="fi">
-        <label>SL en pips</label>
-        <input type="number" id="csl" placeholder="5" step="0.5" min="2" oninput="calcCustom()">
-      </div>
-      <div class="fi">
-        <label>Riesgo % (override)</label>
-        <input type="number" id="crisk2" placeholder="0.4" step="0.1" oninput="calcCustom()">
-      </div>
-    </div>
-    <div id="customout" style="color:var(--tx3);font-size:13px;margin-top:4px">Ingresa el SL en pips para calcular</div>
   </div>
 </div>
 </div>
@@ -1654,7 +1650,9 @@ function calcCustom(){
   if(!pip||!bal){out.innerHTML='<span style="color:var(--tx3)">Ingresa el SL en pips para calcular</span>';return;}
   if(pip<2){out.innerHTML='<div style="background:var(--rdb);border:1px solid var(--rd);border-radius:var(--ra);padding:10px 14px;color:var(--rd);font-size:13px;font-weight:500">SL menor a 2 pips — trade descartado segun checklist (Bloque 6)</div>';return;}
   const rAmt=bal*risk/100;
-  const lots=rAmt/(pip*10+4);
+  const commBuffer=0.4; // $4/lote comision = 0.4 pips equivalentes
+  const slEffective=pip+commBuffer;
+  const lots=rAmt/(slEffective*10);
   const rounded=Math.floor(lots*100)/100;
   const comm=4*rounded;
   const slLoss=rounded*pip*10;
@@ -1662,6 +1660,9 @@ function calcCustom(){
   const totalPctCur=curBal?totalRisk/curBal*100:0;
   const totalPctIni=cfg.balance?totalRisk/cfg.balance*100:0;
   out.innerHTML=`
+  <div style="background:var(--sur2);border:1px solid var(--bd);border-radius:var(--ra);padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--tx2)">
+    SL tecnico: <strong style="color:var(--tx)">${pip} pips</strong> + buffer comision: <strong style="color:var(--am)">+0.4 pips</strong> = SL efectivo: <strong style="color:var(--gr)">${slEffective.toFixed(1)} pips</strong>
+  </div>
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px">
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotaje exacto</div><div style="font-size:24px;font-weight:600;color:var(--gr)">${lots.toFixed(4)}</div></div>
     <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotes (baja)</div><div style="font-size:24px;font-weight:600;color:var(--tx)">${rounded.toFixed(2)}</div></div>

@@ -38,6 +38,8 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
 .content{flex:1;overflow-y:auto}
 .tab{display:none;padding:20px}
 .tab.active{display:block}
+#analisis-content[style*="display: none"],
+#analisis-content[style*="display:none"]{height:0;overflow:hidden;padding:0;margin:0}
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-bottom:20px}
 .kpi{background:var(--sur);border:1px solid var(--bd);border-radius:var(--ra2);padding:12px 14px}
@@ -262,6 +264,7 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
   <button class="nb" onclick="sw('trades',this)">≡ Trades</button>
   <button class="nb" onclick="sw('calc',this)">∑ Calculadora</button>
   <button class="nb" onclick="sw('analisis',this)">🧠 Análisis</button>
+  <button class="nb" onclick="sw('missed',this)">👁 Missed Trades</button>
 </nav>
 
 <div class="content">
@@ -691,6 +694,141 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
 
 </div></div>
 
+<!-- ═══ MISSED TRADES ═══ -->
+<div class="tab" id="tab-missed">
+  <div style="max-width:900px">
+
+    <!-- STATS SUMMARY -->
+    <div class="kpi-grid" id="missed-kpis" style="margin-bottom:16px"></div>
+
+    <!-- ANÁLISIS -->
+    <div class="two-col" style="margin-bottom:14px">
+      <div class="card">
+        <div class="card-ttl">¿Por qué no los tomé? — distribución</div>
+        <div id="missed-why-stats"></div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Por sesión — dónde se me escapan más</div>
+        <div id="missed-session-stats"></div>
+      </div>
+    </div>
+    <div class="two-col" style="margin-bottom:14px">
+      <div class="card">
+        <div class="card-ttl">R perdidas acumuladas — oportunidades reales</div>
+        <div id="missed-r-stats"></div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:8px;font-style:italic">Solo cuenta trades con score ≥ 60 — los que realmente eran A+</div>
+      </div>
+      <div class="card">
+        <div class="card-ttl">Recomendaciones automáticas</div>
+        <div id="missed-reco"></div>
+      </div>
+    </div>
+
+    <!-- BOTÓN NUEVO MISSED TRADE -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-size:14px;font-weight:500" id="missed-count">0 missed trades</span>
+      <button class="save-btn" style="width:auto;padding:9px 20px;margin-top:0" onclick="openMissedForm()">＋ Registrar missed trade</button>
+    </div>
+
+    <!-- TABLA -->
+    <div style="overflow-x:auto">
+      <table class="ttbl">
+        <thead><tr><th>Fecha</th><th>Hora</th><th>Dir</th><th>Score</th><th>RR estimado</th><th>Resultado real</th><th>Razón</th><th>Sesión</th><th>Acciones</th></tr></thead>
+        <tbody id="missed-tbody"></tbody>
+      </table>
+      <div class="empty" id="missed-empty">
+        <div style="font-size:32px;margin-bottom:10px">👁</div>
+        <p style="font-size:14px;font-weight:500;margin-bottom:4px">Sin missed trades registrados</p>
+        <p style="font-size:12px">Registra los setups que identificaste después de que ocurrieron</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MISSED TRADE FORM MODAL -->
+<div class="mo" id="missedmodal" style="display:none" onclick="if(event.target===this)closeMissedForm()">
+  <div class="modal" style="width:540px;max-width:95%">
+    <h3>Registrar Missed Trade</h3>
+
+    <div class="fr">
+      <div class="fi"><label>Fecha del setup</label><input type="date" id="m-di"></div>
+      <div class="fi"><label>Hora aproximada</label><input type="time" id="m-ti"></div>
+    </div>
+    <div class="fr">
+      <div class="fi"><label>Dirección</label><select id="m-dir"><option value="">—</option><option>Buy</option><option>Sell</option></select></div>
+      <div class="fi"><label>Sesión</label><select id="m-sess"><option value="">—</option><option>Londres</option><option>New York</option><option>Asia</option><option>Session Overlap</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fi"><label>Entrada estimada</label><input type="number" id="m-entry" step="0.00001" placeholder="1.08500"></div>
+      <div class="fi"><label>SL estimado</label><input type="number" id="m-sl" step="0.00001" placeholder="1.08300"></div>
+    </div>
+    <div class="fr">
+      <div class="fi"><label>TP estimado</label><input type="number" id="m-tp" step="0.00001" placeholder="1.08900"></div>
+      <div class="fi"><label>RR estimado</label><input type="number" id="m-rr" step="0.1" placeholder="3.0"></div>
+    </div>
+
+    <div class="fg" style="margin-bottom:12px">
+      <label>Resultado real del mercado</label>
+      <select id="m-result">
+        <option value="">—</option>
+        <option value="WIN">Hubiera ganado (precio llegó al TP)</option>
+        <option value="LOSS">Hubiera perdido (precio tocó el SL)</option>
+        <option value="BE">Hubiera sido breakeven</option>
+        <option value="unknown">No lo sé con certeza</option>
+      </select>
+    </div>
+
+    <div class="fg" style="margin-bottom:12px">
+      <label>¿Por qué no lo tomaste?</label>
+      <select id="m-why">
+        <option value="">— Selecciona —</option>
+        <option value="dormido">No estaba en pantalla / dormido</option>
+        <option value="no-vi">Estaba en pantalla pero no vi el setup</option>
+        <option value="dude">Vi el setup pero dudé en ejecutar</option>
+        <option value="ya-en-trade">Ya tenía otro trade abierto</option>
+        <option value="tarde">Vi el setup después de que ya se movió</option>
+        <option value="correcto">No cumplía el checklist — bien hecho no tomar</option>
+      </select>
+    </div>
+
+    <div class="fg" style="margin-bottom:12px">
+      <label>Score del setup (aplica el checklist retrospectivamente)</label>
+      <select id="m-score">
+        <option value="">— Evalúa el setup con honestidad —</option>
+        <option value="80">80/100 — A+ Setup perfecto</option>
+        <option value="70">70/100 — Setup sólido</option>
+        <option value="60">60/100 — Setup operable</option>
+        <option value="50">50/100 — Setup débil</option>
+        <option value="30">30/100 — Setup pobre — bien no haberlo tomado</option>
+      </select>
+    </div>
+
+    <div class="fg" style="margin-bottom:12px">
+      <label>Link screenshot (TradingView / Notion)</label>
+      <input type="url" id="m-screenshot" style="width:100%;padding:8px 10px;font-size:13px;border-radius:8px;border:1px solid var(--bd2);background:var(--sur2);color:var(--tx)" placeholder="https://...">
+    </div>
+
+    <div class="fg" style="margin-bottom:14px">
+      <label>Notas — qué aprendiste de este setup</label>
+      <textarea id="m-notes" style="width:100%;padding:8px 10px;font-size:13px;border-radius:8px;border:1px solid var(--bd2);background:var(--sur2);color:var(--tx);resize:vertical;min-height:60px" placeholder="Ej: El setup fue en apertura de Londres, estaba durmiendo. Necesito revisar el gráfico a las 3AM o poner alertas."></textarea>
+    </div>
+
+    <button class="btn-p" onclick="saveMissedTrade()">💾 Guardar missed trade</button>
+    <button class="btn-g" onclick="closeMissedForm()">Cancelar</button>
+    <div id="missed-msg" style="display:none;margin-top:8px;padding:8px 12px;border-radius:8px;font-size:12px"></div>
+  </div>
+</div>
+
+<!-- MISSED DETAIL MODAL -->
+<div class="mo" id="misseddetailmodal" style="display:none" onclick="if(event.target===this)closeMissedDetail()">
+  <div class="modal" style="width:480px;max-width:95%">
+    <h3>Detalle — Missed Trade</h3>
+    <div id="missed-detail-body"></div>
+    <button class="btn-g" onclick="closeMissedDetail()">Cerrar</button>
+    <button class="btn-g" style="color:var(--rd);border-color:var(--rd);margin-top:6px" id="missed-del-btn">✕ Eliminar</button>
+  </div>
+</div>
+
 <!-- ═══ ANÁLISIS PSICOLÓGICO ═══ -->
 <div class="tab" id="tab-analisis">
   <div id="analisis-empty" style="text-align:center;padding:48px 20px;color:var(--tx3);display:none">
@@ -698,7 +836,7 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
     <p style="font-size:14px;font-weight:500;margin-bottom:6px">Necesitas al menos 10 trades con datos de psicología</p>
     <p style="font-size:12px">Registra más trades completando los campos de pre-trade y post-trade</p>
   </div>
-  <div id="analisis-content">
+  <div id="analisis-content" style="display:none">
     <div class="card" style="border-left:3px solid var(--pu);margin-bottom:14px">
       <div class="card-ttl">🧠 Resumen ejecutivo — patrones identificados</div>
       <div id="exec-summary" style="font-size:13px;color:var(--tx2);line-height:1.8"></div>
@@ -707,36 +845,36 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
     <div class="two-col">
       <div class="card">
         <div class="card-ttl">Win rate por nivel de convicción (1-10)</div>
-        <div style="position:relative;height:180px"><canvas id="aC1"></canvas></div>
+        <div style="position:relative;height:180px;min-height:0" id="aC1-wrap"><canvas id="aC1"></canvas></div>
         <div id="aC1-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
       </div>
       <div class="card">
         <div class="card-ttl">Pensamiento dominante → Win rate</div>
-        <div style="position:relative;height:180px"><canvas id="aC2"></canvas></div>
+        <div style="position:relative;height:180px;min-height:0" id="aC2-wrap"><canvas id="aC2"></canvas></div>
         <div id="aC2-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
       </div>
     </div>
     <div class="two-col">
       <div class="card">
         <div class="card-ttl">Racha previa → Win rate siguiente trade</div>
-        <div style="position:relative;height:160px"><canvas id="aC3"></canvas></div>
+        <div style="position:relative;height:160px;min-height:0" id="aC3-wrap"><canvas id="aC3"></canvas></div>
         <div id="aC3-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
       </div>
       <div class="card">
         <div class="card-ttl">Proceso respetado → Win rate & P&L</div>
-        <div style="position:relative;height:160px"><canvas id="aC4"></canvas></div>
+        <div style="position:relative;height:160px;min-height:0" id="aC4-wrap"><canvas id="aC4"></canvas></div>
         <div id="aC4-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
       </div>
     </div>
     <div class="two-col">
       <div class="card">
         <div class="card-ttl">Presión sentida → WIN vs LOSS (promedio)</div>
-        <div style="position:relative;height:160px"><canvas id="aC5"></canvas></div>
+        <div style="position:relative;height:160px;min-height:0" id="aC5-wrap"><canvas id="aC5"></canvas></div>
         <div id="aC5-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
       </div>
       <div class="card">
         <div class="card-ttl">Evolución semanal — convicción promedio & Win rate</div>
-        <div style="position:relative;height:160px"><canvas id="aC6"></canvas></div>
+        <div style="position:relative;height:160px;min-height:0" id="aC6-wrap"><canvas id="aC6"></canvas></div>
         <div id="aC6-ins" style="font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5"></div>
       </div>
     </div>
@@ -955,7 +1093,14 @@ function sw(name,btn){
     if(name==='overview')try{renderOverview();}catch(e){console.error('renderOverview:',e);}
     if(name==='trades')try{renderList();}catch(e){console.error('renderList:',e);}
     if(name==='form')try{updateRachaDisplay();}catch(e){console.error('updateRacha:',e);}
-    if(name==='analisis')try{renderAnalisis();}catch(e){console.error('renderAnalisis:',e);}
+    if(name==='analisis'){
+      const el=document.getElementById('analisis-content');
+      if(el&&trades.filter(t=>t.status!=='open').length>=5)el.style.display='block';
+      try{renderAnalisis();}catch(e){console.error('renderAnalisis:',e);}
+    }
+    if(name==='missed'){
+      setTimeout(()=>{try{renderMissed();}catch(e){console.error('renderMissed:',e);}},50);
+    }
     if(name==='calc'){
       try{
         const curBal=getCurrentBalance();
@@ -1677,7 +1822,7 @@ function calcCustom(){
 
 // ── BACKUP / RESTORE ──
 function exportJSON(){
-  const data={cfg,trades,version:7,asset:'EURUSD',exportedAt:new Date().toISOString()};
+  const data={cfg,trades,missedTrades,version:7,asset:'EURUSD',exportedAt:new Date().toISOString()};
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   a.download='eurusd_journal_backup_'+new Date().toISOString().split('T')[0]+'.json';
@@ -1691,6 +1836,7 @@ function importJSON(e){
       const data=JSON.parse(ev.target.result);
       if(data.cfg)cfg=data.cfg;
       if(data.trades)trades=data.trades;
+      if(data.missedTrades)missedTrades=data.missedTrades;
       persist();renderAll();
       alert('✓ Datos restaurados. '+trades.length+' trades cargados.');
     }catch(err){alert('Error al leer el archivo. Verifica que sea un backup válido.');}
@@ -1726,8 +1872,10 @@ function renderAnalisis(){
   const closed=trades.filter(t=>t.status!=='open');
   const psychTrades=closed.filter(t=>t.conviccion!=null||t.pensamiento!=null||t.proceso!=null);
   const MIN=5;
-  document.getElementById('analisis-empty').style.display=psychTrades.length<MIN?'block':'none';
-  document.getElementById('analisis-content').style.display=psychTrades.length<MIN?'none':'block';
+  const emptyEl=document.getElementById('analisis-empty');
+  const contentEl=document.getElementById('analisis-content');
+  if(emptyEl)emptyEl.style.display=psychTrades.length<MIN?'block':'none';
+  if(contentEl)contentEl.style.display=psychTrades.length<MIN?'none':'block';
   if(psychTrades.length<MIN)return;
 
   const rp=getCurrentBalance()*cfg.risk/100; // risk per trade in $ (current balance)
@@ -2043,7 +2191,209 @@ ${fomo.n>=3&&fomo.wr<50?'· Trabajar gestión del FOMO — costo medible\n':''}$
 }
 
 
-init();
+// ── MISSED TRADES ──
+const SM='eur_j7_msd';
+let missedTrades=[];
+try{const m=localStorage.getItem(SM);if(m)missedTrades=JSON.parse(m);}catch(e){}
+
+const WHY_LABELS={
+  'dormido':'No estaba en pantalla / dormido',
+  'no-vi':'En pantalla pero no vi el setup',
+  'dude':'Vi el setup pero dude',
+  'ya-en-trade':'Ya tenia otro trade abierto',
+  'tarde':'Vi el setup cuando ya se movio',
+  'correcto':'No cumplia el checklist — bien hecho'
+};
+const WHY_FIX={
+  'dormido':'Configura alertas en TradingView para los niveles clave antes de dormir',
+  'no-vi':'Revisa el grafico cada 15 minutos durante las sesiones activas',
+  'dude':'Trabaja la conviccion — si el checklist dice A+, ejecuta sin dudar',
+  'ya-en-trade':'Considera si tu regla de un trade a la vez es optima para tu estilo',
+  'tarde':'Llega 15 minutos antes de la apertura de sesion para identificar niveles',
+  'correcto':'Correcto no tomarlo — el filtro del checklist funciona'
+};
+
+function persistMissed(){localStorage.setItem(SM,JSON.stringify(missedTrades));}
+
+function openMissedForm(){
+  const now=new Date();
+  document.getElementById('m-di').value=now.toISOString().split('T')[0];
+  document.getElementById('m-ti').value=now.toTimeString().slice(0,5);
+  document.getElementById('missedmodal').style.display='flex';
+}
+function closeMissedForm(){
+  document.getElementById('missedmodal').style.display='none';
+  ['m-di','m-ti','m-dir','m-sess','m-entry','m-sl','m-tp','m-rr','m-why','m-score','m-notes','m-result','m-screenshot'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('missed-msg').style.display='none';
+}
+
+function saveMissedTrade(){
+  const di=document.getElementById('m-di').value;
+  const dir=document.getElementById('m-dir').value;
+  const why=document.getElementById('m-why').value;
+  if(!di||!dir||!why){
+    const msg=document.getElementById('missed-msg');
+    msg.textContent='Completa al menos: fecha, dirección y razón.';
+    msg.style.display='block';msg.style.background='var(--amb)';msg.style.color='var(--am)';
+    return;
+  }
+  const ti=document.getElementById('m-ti').value;
+  const sess=document.getElementById('m-sess').value||getSess(ti)||'—';
+  const rr=parseFloat(document.getElementById('m-rr').value)||null;
+  const score=parseInt(document.getElementById('m-score').value)||null;
+  const result=document.getElementById('m-result').value;
+  missedTrades.push({
+    id:Date.now(),di,ti,dir,session:sess,
+    entry:parseFloat(document.getElementById('m-entry').value)||null,
+    sl:parseFloat(document.getElementById('m-sl').value)||null,
+    tp:parseFloat(document.getElementById('m-tp').value)||null,
+    rr,result,score,why,
+    screenshot:document.getElementById('m-screenshot').value||'',
+    notes:document.getElementById('m-notes').value
+  });
+  persistMissed();
+  closeMissedForm();
+  renderMissed();
+  // Flash success
+  const msg=document.getElementById('missed-msg');
+  msg.textContent='Missed trade guardado.';
+  msg.style.display='block';msg.style.background='var(--grb)';msg.style.color='var(--gr)';
+  setTimeout(()=>msg.style.display='none',2000);
+}
+
+function renderMissed(){
+  const total=missedTrades.length;
+  document.getElementById('missed-count').textContent=total+' missed trade'+(total!==1?'s':'')+' registrado'+(total!==1?'s':'');
+  const tbody=document.getElementById('missed-tbody');
+  const empty=document.getElementById('missed-empty');
+  if(!total){tbody.innerHTML='';empty.style.display='block';renderMissedStats();return;}
+  empty.style.display='none';
+  tbody.innerHTML=[...missedTrades].reverse().map((t,i)=>{
+    const ri=missedTrades.length-1-i;
+    const resultCol={WIN:'var(--gr)',LOSS:'var(--rd)',BE:'var(--bl)',unknown:'var(--tx3)'}[t.result]||'var(--tx3)';
+    const resultLbl={WIN:'Hubiera ganado',LOSS:'Hubiera perdido',BE:'Hubiera sido BE',unknown:'No confirmado'}[t.result]||'—';
+    const sc=t.score;
+    const scCol=sc>=70?'var(--gr)':sc>=50?'var(--am)':'var(--rd)';
+    return `<tr>
+      <td>${t.di||'—'}</td>
+      <td style="color:var(--tx3)">${t.ti||'—'}</td>
+      <td style="font-weight:600;color:${t.dir==='Buy'?'var(--gr)':'var(--bl)'}">${t.dir||'—'}</td>
+      <td style="color:${sc?scCol:'var(--tx3)'};font-weight:600">${sc?sc+'/100':'—'}</td>
+      <td style="color:var(--am)">${t.rr?'+'+t.rr.toFixed(1)+'R':'—'}</td>
+      <td style="color:${resultCol}">${resultLbl}</td>
+      <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis">${WHY_LABELS[t.why]||t.why||'—'}</td>
+      <td style="font-size:11px">${t.session||'—'}</td>
+      <td>
+        <button class="btn-sm" style="padding:3px 8px;font-size:11px" onclick="openMissedDetail(${ri})">👁 Ver</button>
+      </td>
+    </tr>`;
+  }).join('');
+  renderMissedStats();
+}
+
+function renderMissedStats(){
+  const total=missedTrades.length;
+  // KPIs
+  const realMissed=missedTrades.filter(t=>t.why!=='correcto');
+  const correctSkip=missedTrades.filter(t=>t.why==='correcto');
+  const wouldWin=missedTrades.filter(t=>t.result==='WIN');
+  const riskPerTrade=cfg.balance*cfg.risk/100;
+  const rLost=wouldWin.filter(t=>t.rr&&t.score>=60).reduce((s,t)=>s+t.rr,0);
+  const usdLost=rLost*riskPerTrade;
+  document.getElementById('missed-kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-lbl">Total missed</div><div class="kpi-val">${total}</div><div class="kpi-sub">setups identificados</div></div>
+    <div class="kpi"><div class="kpi-lbl">Perdidos realmente</div><div class="kpi-val neg">${realMissed.length}</div><div class="kpi-sub">deberian haberse tomado</div></div>
+    <div class="kpi"><div class="kpi-lbl">Bien no tomados</div><div class="kpi-val pos">${correctSkip.length}</div><div class="kpi-sub">checklist los filtro</div></div>
+    <div class="kpi"><div class="kpi-lbl">R perdidas (A+)</div><div class="kpi-val neg">${rLost>0?'+'+rLost.toFixed(1)+'R':'0R'}</div><div class="kpi-sub">$${usdLost.toFixed(0)} en oportunidades</div></div>
+  `;
+  // Por razón
+  const whyCounts={};
+  missedTrades.forEach(t=>{whyCounts[t.why]=(whyCounts[t.why]||0)+1;});
+  const whyEl=document.getElementById('missed-why-stats');
+  if(Object.keys(whyCounts).length){
+    whyEl.innerHTML=Object.entries(whyCounts).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+      const pct=Math.round(v/total*100);
+      const col=k==='correcto'?'var(--gr)':v>=3?'var(--rd)':'var(--am)';
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="color:var(--tx2)">${WHY_LABELS[k]||k}</span>
+          <span style="font-weight:600;color:${col}">${v} (${pct}%)</span>
+        </div>
+        <div style="height:5px;background:var(--sur3);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${col};border-radius:3px"></div>
+        </div>
+      </div>`;
+    }).join('');
+  } else whyEl.innerHTML='<p style="font-size:12px;color:var(--tx3)">Sin datos aun</p>';
+
+  // Por sesión
+  const sessCounts={};
+  missedTrades.filter(t=>t.why!=='correcto').forEach(t=>{if(t.session)sessCounts[t.session]=(sessCounts[t.session]||0)+1;});
+  const sessEl=document.getElementById('missed-session-stats');
+  if(Object.keys(sessCounts).length){
+    sessEl.innerHTML=Object.entries(sessCounts).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+      const col=v>=3?'var(--rd)':v>=2?'var(--am)':'var(--tx2)';
+      return `<div class="sr"><span class="sl2">${k}</span><span class="sv" style="color:${col}">${v} missed</span></div>`;
+    }).join('');
+  } else sessEl.innerHTML='<p style="font-size:12px;color:var(--tx3)">Sin datos aun</p>';
+
+  // R perdidas breakdown
+  const rEl=document.getElementById('missed-r-stats');
+  const aPlus=missedTrades.filter(t=>t.score>=60&&t.result==='WIN'&&t.rr);
+  if(aPlus.length){
+    const totalR=aPlus.reduce((s,t)=>s+t.rr,0);
+    const avgR=totalR/aPlus.length;
+    rEl.innerHTML=`
+      <div class="sr"><span class="sl2">Setups A+ perdidos</span><span class="sv">${aPlus.length}</span></div>
+      <div class="sr"><span class="sl2">R total perdida</span><span class="sv" style="color:var(--rd)">+${totalR.toFixed(1)}R</span></div>
+      <div class="sr"><span class="sl2">R promedio por missed</span><span class="sv" style="color:var(--am)">${avgR.toFixed(1)}R</span></div>
+      <div class="sr"><span class="sl2">USD equivalente</span><span class="sv" style="color:var(--rd)">$${(totalR*riskPerTrade).toFixed(0)}</span></div>`;
+  } else rEl.innerHTML='<p style="font-size:12px;color:var(--tx3)">Sin A+ perdidos confirmados aun</p>';
+
+  // Recomendaciones
+  const recoEl=document.getElementById('missed-reco');
+  const topReason=Object.entries(whyCounts).filter(([k])=>k!=='correcto').sort((a,b)=>b[1]-a[1])[0];
+  if(topReason&&topReason[1]>=2){
+    const[key,count]=topReason;
+    recoEl.innerHTML=`
+      <div style="background:var(--amb);border:1px solid var(--am);border-radius:var(--ra);padding:10px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--am);margin-bottom:4px">PATRON PRINCIPAL — ${count} ocurrencias</div>
+        <div style="font-size:12.5px;color:var(--tx2);margin-bottom:6px">${WHY_LABELS[key]||key}</div>
+        <div style="font-size:12px;color:var(--gr)">→ ${WHY_FIX[key]||'Revisa tu rutina de pre-sesion'}</div>
+      </div>
+      ${rLost>=5?`<div style="background:var(--rdb);border:1px solid var(--rd);border-radius:var(--ra);padding:10px 14px;font-size:12px;color:var(--rd)">Has perdido ${rLost.toFixed(1)}R en oportunidades reales — equivale a $${usdLost.toFixed(0)}. Resolver el patron principal de missed trades tiene impacto directo en el P&L.</div>`:''}`;
+  } else if(total>0){
+    recoEl.innerHTML='<p style="font-size:12px;color:var(--tx3)">Registra mas missed trades para identificar patrones claros.</p>';
+  } else {
+    recoEl.innerHTML='<p style="font-size:12px;color:var(--tx3)">Sin datos aun.</p>';
+  }
+}
+
+function openMissedDetail(idx){
+  const t=missedTrades[idx];if(!t)return;
+  const resultLbl={WIN:'Hubiera ganado',LOSS:'Hubiera perdido',BE:'Hubiera sido BE',unknown:'No confirmado'}[t.result]||'—';
+  const resultCol={WIN:'var(--gr)',LOSS:'var(--rd)',BE:'var(--bl)',unknown:'var(--tx3)'}[t.result]||'var(--tx3)';
+  document.getElementById('missed-detail-body').innerHTML=`
+    <div class="drow"><span class="dl">Fecha / Hora</span><span class="dv2">${t.di||'—'} ${t.ti||''}</span></div>
+    <div class="drow"><span class="dl">Dirección / Sesión</span><span class="dv2">${t.dir||'—'} · ${t.session||'—'}</span></div>
+    <div class="drow"><span class="dl">Entrada / SL / TP</span><span class="dv2">${t.entry||'—'} / ${t.sl||'—'} / ${t.tp||'—'}</span></div>
+    <div class="drow"><span class="dl">RR estimado</span><span class="dv2" style="color:var(--am)">${t.rr?'+'+t.rr.toFixed(1)+'R':'—'}</span></div>
+    <div class="drow"><span class="dl">Resultado real</span><span class="dv2" style="color:${resultCol};font-weight:600">${resultLbl}</span></div>
+    <div class="drow"><span class="dl">Score del setup</span><span class="dv2">${t.score?t.score+'/100':'—'}</span></div>
+    <div class="drow"><span class="dl">¿Por qué no lo tomé?</span><span class="dv2">${WHY_LABELS[t.why]||t.why||'—'}</span></div>
+    <div class="drow"><span class="dl">Acción correctiva</span><span class="dv2" style="color:var(--gr);font-size:12px">${WHY_FIX[t.why]||'—'}</span></div>
+    ${t.notes?`<div style="margin-top:10px"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Notas</div><div class="nb2">${t.notes}</div></div>`:''}
+    ${t.screenshot?`<div style="margin-top:10px"><div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Screenshot</div><div class="lb2"><a href="${t.screenshot}" target="_blank" rel="noopener">🔗 ${t.screenshot}</a></div></div>`:''}
+  `;
+  document.getElementById('missed-del-btn').onclick=()=>{
+    if(confirm('Eliminar este missed trade?')){
+      missedTrades.splice(idx,1);persistMissed();closeMissedDetail();renderMissed();
+    }
+  };
+  document.getElementById('misseddetailmodal').style.display='flex';
+}
+function closeMissedDetail(){document.getElementById('misseddetailmodal').style.display='none';}
+
 
 </script>
 </body>

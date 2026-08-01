@@ -244,7 +244,16 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-l">
-    <span class="badge">EUR/USD</span>
+    <div style="position:relative;display:inline-block">
+      <button id="asset-btn" onclick="toggleAssetMenu()" style="display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--bd2);border-radius:20px;padding:4px 12px;cursor:pointer;color:var(--tx)">
+        <span id="asset-badge" class="badge">EUR/USD</span>
+        <span style="font-size:11px;color:var(--tx3)">&#9660;</span>
+      </button>
+      <div id="asset-menu" style="display:none;position:absolute;top:38px;left:0;background:var(--sur);border:1px solid var(--bd);border-radius:var(--ra2);min-width:150px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.5)">
+        <button onclick="switchAsset('EUR')" style="width:100%;padding:10px 14px;background:none;border:none;color:var(--tx2);font-size:13px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background='none'"><span style="width:9px;height:9px;border-radius:50%;background:#1DB87A;flex-shrink:0;display:inline-block"></span>EUR/USD</button>
+        <button onclick="switchAsset('XAU')" style="width:100%;padding:10px 14px;background:none;border:none;color:var(--tx2);font-size:13px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='var(--sur3)'" onmouseout="this.style.background='none'"><span style="width:9px;height:9px;border-radius:50%;background:#F59E0B;flex-shrink:0;display:inline-block"></span>XAU/USD</button>
+      </div>
+    </div>
     <span class="hdr-title">Trading Journal</span>
     <span class="hdr-acct" id="hdr-acct"></span>
   </div>
@@ -662,30 +671,34 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
 <!-- ═══ CALCULADORA ═══ -->
 <div class="tab" id="tab-calc">
 <div style="max-width:560px">
-  <!-- CÁLCULO PERSONALIZADO — arriba -->
   <div class="card">
-    <div class="card-ttl">Cálculo personalizado</div>
+    <div class="card-ttl">Calculo personalizado</div>
     <div style="display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap">
-      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Balance actual (base del riesgo)</div><div style="font-size:18px;font-weight:600;color:var(--gr)" id="calc-bal-cur">—</div></div>
-      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Balance inicial (referencia drawdown)</div><div style="font-size:18px;font-weight:600;color:var(--tx2)" id="calc-bal-ini">—</div></div>
+      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Balance actual</div><div style="font-size:18px;font-weight:600;color:var(--gr)" id="calc-bal-cur">—</div></div>
+      <div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Balance inicial</div><div style="font-size:18px;font-weight:600;color:var(--tx2)" id="calc-bal-ini">—</div></div>
     </div>
     <div class="fr" style="margin-bottom:10px">
-      <div class="fi"><label>SL técnico (pips)</label><input type="number" id="csl" placeholder="5" step="0.5" min="2" oninput="calcCustom()"></div>
+      <div class="fi"><label id="csl-label">SL tecnico (pips)</label><input type="number" id="csl" placeholder="5" step="0.5" min="2" oninput="calcCustom()"></div>
       <div class="fi"><label>Riesgo % (override)</label><input type="number" id="crisk2" placeholder="0.4" step="0.1" oninput="calcCustom()"></div>
     </div>
-    <div class="comm-note">✓ El SL técnico que ingresas ya incluye el buffer de comisión automáticamente · Comisión $4/lote = 0.4 pips equivalentes · SL mínimo: 2 pips</div>
-    <div id="customout" style="color:var(--tx3);font-size:13px;margin-top:10px">Ingresa el SL en pips para calcular</div>
+    <div id="xau-price-wrap-custom" style="display:none;margin-bottom:10px">
+      <div class="fi"><label>Precio actual del oro ($)</label><input type="number" id="xau-price-custom" placeholder="4050" step="1" oninput="calcCustom()"></div>
+    </div>
+    <div class="comm-note" id="calc-comm-note">✓ SL tecnico incluye buffer de comision · Comision $4/lote = 0.4 pips · SL minimo: 2 pips</div>
+    <div id="customout" style="color:var(--tx3);font-size:13px;margin-top:10px">Ingresa el SL para calcular</div>
   </div>
-  <!-- TABLA DE REFERENCIA RÁPIDA — abajo -->
   <div class="card">
-    <div class="card-ttl">Tabla de referencia rápida — EUR/USD · The5ers</div>
+    <div class="card-ttl" id="ref-table-title">Tabla de referencia — EUR/USD · The5ers</div>
     <div class="fr" style="margin-bottom:6px">
       <div class="fi"><label>Balance ($)</label><input type="number" id="cbal" placeholder="10000" oninput="calcRef()"></div>
       <div class="fi"><label>Riesgo %</label><input type="number" id="crisk" value="0.4" step="0.1" min="0.1" oninput="calcRef()"></div>
     </div>
-    <p style="font-size:11px;color:var(--tx3);margin:6px 0 8px">EUR/USD · Contract size: 100,000 · Min lot: 0.01 · Step: 0.01 · Comisión: $4/lote RT · Pip value = $10/lote</p>
+    <div id="xau-price-wrap" style="display:none;margin-bottom:8px">
+      <div class="fi"><label>Precio actual del oro ($)</label><input type="number" id="xau-price" placeholder="4050" step="1" oninput="calcRef()"></div>
+    </div>
+    <p style="font-size:11px;color:var(--tx3);margin:6px 0 8px" id="calc-spec-note">EUR/USD · Contract size: 100,000 · Comision: $4/lote RT</p>
     <table class="rtbl">
-      <thead><tr><th>SL (pips)</th><th>$ riesgo</th><th>Lotes exacto</th><th>Lotes (↓)</th><th>Comisión</th><th>Costo total</th><th>% cuenta</th></tr></thead>
+      <thead><tr><th id="sl-col-header">SL (pips)</th><th>$ riesgo</th><th>Lotes exacto</th><th>Lotes (↓)</th><th>Comision</th><th>Costo total</th><th>% cuenta</th></tr></thead>
       <tbody id="reftbody"></tbody>
     </table>
   </div>
@@ -931,6 +944,45 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
 </div>
 
 <script>
+// ── DUAL ASSET ARCHITECTURE ──
+const KEYS={EUR:{cfg:'eur_j7_cfg',trd:'eur_j7_trd',msd:'eur_j7_msd'},XAU:{cfg:'xau_j7_cfg',trd:'xau_j7_trd',msd:'xau_j7_msd'}};
+let activeAsset='EUR';
+const ASSET_CFG={
+  EUR:{label:'EUR/USD',color:'#1DB87A',grd:'#0F6E49',grb:'#0A2A1E',commType:'fixed',commPerLot:4,pipValue:10,contractSize:100000,slMin:2,slMinLabel:'2 pips',calcNote:'Pip value $10/lote · Comision fija $4/lote RT'},
+  XAU:{label:'XAU/USD',color:'#F59E0B',grd:'#c97d06',grb:'#2A1F0A',commType:'percent',commRate:0.0028,pipValue:1,contractSize:100,slMin:3,slMinLabel:'3 puntos',calcNote:'Pip value $1/punto/lote · Comision 0.0028% del notional RT'}
+};
+function getAssetData(){const k=KEYS[activeAsset];let c0={acct:'',balance:0,risk:0.4,ddD:2,ddW:4},t0=[],m0=[];try{const c=localStorage.getItem(k.cfg);if(c)c0=JSON.parse(c);}catch(e){}try{const t=localStorage.getItem(k.trd);if(t)t0=JSON.parse(t);}catch(e){}try{const m=localStorage.getItem(k.msd);if(m)m0=JSON.parse(m);}catch(e){}return{cfg:c0,trades:t0,missedTrades:m0};}
+function persistAsset(){const k=KEYS[activeAsset];localStorage.setItem(k.cfg,JSON.stringify(cfg));localStorage.setItem(k.trd,JSON.stringify(trades));localStorage.setItem(k.msd,JSON.stringify(missedTrades));}
+function toggleAssetMenu(){const m=document.getElementById('asset-menu');if(m)m.style.display=m.style.display==='none'?'block':'none';}
+function applyAssetTheme(){
+  const ac=ASSET_CFG[activeAsset];
+  const b=document.getElementById('asset-badge');if(b){b.textContent=ac.label;b.style.background=ac.color;}
+  document.documentElement.style.setProperty('--gr',ac.color);
+  document.documentElement.style.setProperty('--grd',ac.grd);
+  document.documentElement.style.setProperty('--grb',ac.grb);
+}
+function updateChecklistForAsset(){
+  const ac=ASSET_CFG[activeAsset];const isXAU=activeAsset==='XAU';
+  const b6s=document.getElementById('b6-s');const b6n=document.getElementById('b6-n');
+  if(b6s){const sp=b6s.querySelector('span');if(sp)sp.textContent='SL mayor o igual a '+ac.slMinLabel+' — trade valido';}
+  if(b6n){const sp=b6n.querySelector('span');if(sp)sp.textContent='SL menor a '+ac.slMinLabel+' — descartar el trade';}
+  const cn=document.getElementById('calc-comm-note');if(cn)cn.textContent='✓ '+ac.calcNote;
+  const csl=document.getElementById('csl-label');if(csl)csl.textContent=isXAU?'SL tecnico (puntos)':'SL tecnico (pips)';
+  const xw=document.getElementById('xau-price-wrap');if(xw)xw.style.display=isXAU?'block':'none';
+  const xwc=document.getElementById('xau-price-wrap-custom');if(xwc)xwc.style.display=isXAU?'block':'none';
+  const rtt=document.getElementById('ref-table-title');if(rtt)rtt.textContent=isXAU?'Tabla de referencia — XAU/USD':'Tabla de referencia — EUR/USD · The5ers';
+  const sn=document.getElementById('calc-spec-note');if(sn)sn.textContent=isXAU?'XAU/USD · Contract size: 100 oz · Comision 0.0028% notional RT':'EUR/USD · Contract size: 100,000 · Comision: $4/lote RT';
+  const sh=document.getElementById('sl-col-header');if(sh)sh.textContent=isXAU?'SL (puntos)':'SL (pips)';
+}
+function switchAsset(asset){
+  const m=document.getElementById('asset-menu');if(m)m.style.display='none';
+  if(asset===activeAsset)return;
+  activeAsset=asset;
+  const d=getAssetData();cfg=d.cfg;trades=d.trades;missedTrades=d.missedTrades;
+  applyAssetTheme();updateChecklistForAsset();resetForm();
+  if(!cfg.balance)openCfg();else renderAll();
+}
+
 const SC='eur_j7_cfg', ST='eur_j7_trd';
 let cfg={acct:'',balance:0,risk:0.4,ddD:2,ddW:4};
 let trades=[];
@@ -1071,14 +1123,16 @@ function unlockB(id){const el=document.getElementById('bc'+id);if(el)el.classLis
 
 // ── INIT ──
 function init(){
-  try{const c=localStorage.getItem(SC);if(c)cfg=JSON.parse(c);}catch(e){}
-  try{const t=localStorage.getItem(ST);if(t)trades=JSON.parse(t);}catch(e){}
+  document.addEventListener('click',function(e){const btn=document.getElementById('asset-btn');const menu=document.getElementById('asset-menu');if(btn&&menu&&!btn.contains(e.target)&&!menu.contains(e.target))menu.style.display='none';});
+  const d=getAssetData();cfg=d.cfg;trades=d.trades;missedTrades=d.missedTrades;
+  applyAssetTheme();
+  updateChecklistForAsset();
   setToday();
   if(!cfg.balance)openCfg();else renderAll();
 }
 
 
-function persist(){localStorage.setItem(SC,JSON.stringify(cfg));localStorage.setItem(ST,JSON.stringify(trades));}
+function persist(){persistAsset();}
 function setToday(){
   const now=new Date();
   const di=document.getElementById('tdi');if(di)di.value=now.toISOString().split('T')[0];
@@ -1757,6 +1811,7 @@ function resetForm(){
 
 // ── CALCULADORA ──
 function calcRef(){
+  const ac=ASSET_CFG[activeAsset];const isXAU=activeAsset==='XAU';
   const curBal=getCurrentBalance();
   const bal=parseFloat(document.getElementById('cbal').value)||curBal||0;
   const risk=parseFloat(document.getElementById('crisk').value)||cfg.risk||0.4;
@@ -1765,15 +1820,13 @@ function calcRef(){
   if(elCur)elCur.textContent='$'+curBal.toLocaleString('en-US',{minimumFractionDigits:2});
   if(elIni)elIni.textContent='$'+(cfg.balance||0).toLocaleString('en-US',{minimumFractionDigits:2});
   const rAmt=bal*risk/100;
-  // Pips from 2 to 30, stepping by 2
-  const SLS=[2,4,6,8,10];
+  const goldPrice=isXAU?(parseFloat(document.getElementById('xau-price')&&document.getElementById('xau-price').value)||4050):0;
+  const SLS=isXAU?[3,5,8,10,15,20,30,50]:[2,4,6,8,10];
   document.getElementById('reftbody').innerHTML=SLS.map(pip=>{
-    // Commission-inclusive: lots = rAmt / (pip×10 + 4)
-    const lots=rAmt/(pip*10+4);
-    const rounded=Math.floor(lots*100)/100;
-    const comm=4*rounded;
-    const slLoss=rounded*pip*10;
-    const totalRisk=slLoss+comm;
+    let lots,comm,slLoss,totalRisk;
+    if(!isXAU){lots=rAmt/(pip*10+4);const r=Math.floor(lots*100)/100;comm=4*r;slLoss=r*pip*10;totalRisk=slLoss+comm;lots=r;}
+    else{const gp=goldPrice;lots=rAmt/(pip*1+ac.commRate*ac.contractSize*gp);const r=Math.floor(lots*100)/100;comm=ac.commRate*r*ac.contractSize*gp;slLoss=r*pip*1;totalRisk=slLoss+comm;lots=r;}
+    const rounded=lots;
     const totalPctCur=curBal?totalRisk/curBal*100:0;
     return `<tr>
       <td style="font-weight:600">${pip}</td>
@@ -1787,13 +1840,27 @@ function calcRef(){
   }).join('');
 }
 function calcCustom(){
+  const ac=ASSET_CFG[activeAsset];const isXAU=activeAsset==='XAU';
   const curBal=getCurrentBalance();
   const bal=parseFloat(document.getElementById('cbal').value)||curBal||0;
   const pip=parseFloat(document.getElementById('csl').value);
   const risk=parseFloat(document.getElementById('crisk2').value)||cfg.risk||0.4;
   const out=document.getElementById('customout');
-  if(!pip||!bal){out.innerHTML='<span style="color:var(--tx3)">Ingresa el SL en pips para calcular</span>';return;}
-  if(pip<2){out.innerHTML='<div style="background:var(--rdb);border:1px solid var(--rd);border-radius:var(--ra);padding:10px 14px;color:var(--rd);font-size:13px;font-weight:500">SL menor a 2 pips — trade descartado segun checklist (Bloque 6)</div>';return;}
+  if(!pip||!bal){out.innerHTML='<span style="color:var(--tx3)">Ingresa el SL para calcular</span>';return;}
+  if(pip<ac.slMin){out.innerHTML='<div style="background:var(--rdb);border:1px solid var(--rd);border-radius:var(--ra);padding:10px 14px;color:var(--rd);font-size:13px;font-weight:500">SL menor a '+ac.slMinLabel+' — trade descartado segun checklist (Bloque 6)</div>';return;}
+  if(isXAU){
+    const goldPrice=parseFloat(document.getElementById('xau-price-custom')&&document.getElementById('xau-price-custom').value)||4050;
+    const rAmt=bal*risk/100;
+    const lots=rAmt/(pip*1+ac.commRate*ac.contractSize*goldPrice);
+    const rounded=Math.floor(lots*100)/100;
+    const comm=ac.commRate*rounded*ac.contractSize*goldPrice;
+    const slLoss=rounded*pip*1;
+    const totalRisk=slLoss+comm;
+    const pctCur=curBal?totalRisk/curBal*100:0;
+    const pctIni=cfg.balance?totalRisk/cfg.balance*100:0;
+    out.innerHTML='<div style="background:var(--sur2);border:1px solid var(--bd);border-radius:var(--ra);padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--tx2)">SL: <strong>'+pip+' puntos</strong> · Precio oro: <strong style="color:var(--am)">$'+goldPrice+'</strong></div><div style="display:flex;gap:12px;flex-wrap:wrap"><div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotaje exacto</div><div style="font-size:24px;font-weight:600;color:var(--gr)">'+lots.toFixed(4)+'</div></div><div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Lotes (baja)</div><div style="font-size:24px;font-weight:600;color:var(--tx)">'+rounded.toFixed(2)+'</div></div><div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Riesgo max.</div><div style="font-size:24px;font-weight:600;color:var(--am)">$'+rAmt.toFixed(2)+'</div></div><div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Comision RT</div><div style="font-size:24px;font-weight:600;color:var(--am)">+$'+comm.toFixed(2)+'</div></div><div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">Costo total</div><div style="font-size:24px;font-weight:600;color:var(--rd)">$'+totalRisk.toFixed(2)+'</div></div><div><div style="font-size:10px;color:var(--tx3);margin-bottom:2px">% cuenta</div><div style="font-size:22px;font-weight:600;color:var(--tx3)">'+pctCur.toFixed(3)+'%</div></div></div>';
+    return;
+  }
   const rAmt=bal*risk/100;
   const commBuffer=0.4; // $4/lote comision = 0.4 pips equivalentes
   const slEffective=pip+commBuffer;
@@ -1821,11 +1888,14 @@ function calcCustom(){
 }
 
 // ── BACKUP / RESTORE ──
+function getStoredAsset(asset){const k=KEYS[asset];let c0={acct:'',balance:0,risk:0.4,ddD:2,ddW:4},t0=[],m0=[];try{const c=localStorage.getItem(k.cfg);if(c)c0=JSON.parse(c);}catch(e){}try{const t=localStorage.getItem(k.trd);if(t)t0=JSON.parse(t);}catch(e){}try{const m=localStorage.getItem(k.msd);if(m)m0=JSON.parse(m);}catch(e){}return{cfg:c0,trades:t0,missedTrades:m0};}
 function exportJSON(){
-  const data={cfg,trades,missedTrades,version:7,asset:'EURUSD',exportedAt:new Date().toISOString()};
+  const eurD=activeAsset==='EUR'?{cfg,trades,missedTrades}:getStoredAsset('EUR');
+  const xauD=activeAsset==='XAU'?{cfg,trades,missedTrades}:getStoredAsset('XAU');
+  const data={eur:eurD,xau:xauD,activeAsset,version:8,exportedAt:new Date().toISOString()};
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
-  a.download='eurusd_journal_backup_'+new Date().toISOString().split('T')[0]+'.json';
+  a.download='journal_backup_'+new Date().toISOString().split('T')[0]+'.json';
   a.click();
 }
 function importJSON(e){
@@ -1834,12 +1904,16 @@ function importJSON(e){
   reader.onload=ev=>{
     try{
       const data=JSON.parse(ev.target.result);
-      if(data.cfg)cfg=data.cfg;
-      if(data.trades)trades=data.trades;
-      if(data.missedTrades)missedTrades=data.missedTrades;
-      persist();renderAll();
-      alert('✓ Datos restaurados. '+trades.length+' trades cargados.');
-    }catch(err){alert('Error al leer el archivo. Verifica que sea un backup válido.');}
+      if(data.eur||data.xau){
+        if(data.eur){const k=KEYS.EUR;localStorage.setItem(k.cfg,JSON.stringify(data.eur.cfg));localStorage.setItem(k.trd,JSON.stringify(data.eur.trades));localStorage.setItem(k.msd,JSON.stringify(data.eur.missedTrades||[]));}
+        if(data.xau){const k=KEYS.XAU;localStorage.setItem(k.cfg,JSON.stringify(data.xau.cfg));localStorage.setItem(k.trd,JSON.stringify(data.xau.trades));localStorage.setItem(k.msd,JSON.stringify(data.xau.missedTrades||[]));}
+        const d=getAssetData();cfg=d.cfg;trades=d.trades;missedTrades=d.missedTrades;
+        renderAll();alert('Backup restaurado. EUR: '+(data.eur?data.eur.trades.length:0)+' trades / XAU: '+(data.xau?data.xau.trades.length:0)+' trades');
+      } else {
+        if(data.cfg)cfg=data.cfg;if(data.trades)trades=data.trades;if(data.missedTrades)missedTrades=data.missedTrades;
+        persist();renderAll();alert('Datos restaurados. '+trades.length+' trades cargados.');
+      }
+    }catch(err){alert('Error al leer el archivo. Verifica que sea un backup valido.');}
   };
   reader.readAsText(file);e.target.value='';
 }
@@ -2213,7 +2287,7 @@ const WHY_FIX={
   'correcto':'Correcto no tomarlo — el filtro del checklist funciona'
 };
 
-function persistMissed(){localStorage.setItem(SM,JSON.stringify(missedTrades));}
+function persistMissed(){persistAsset();}
 
 function openMissedForm(){
   const now=new Date();

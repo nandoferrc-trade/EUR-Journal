@@ -423,14 +423,15 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
   <!-- BLOQUE 2 — CONFIRMACIÓN -->
   <div class="blk locked" id="bc2">
     <div class="bh">
-      <div class="bt2"><div class="bnum lk" id="bn2">2</div> Confirmación — Cambio de estructura 4H / 1H</div>
+      <div class="bt2"><div class="bnum lk" id="bn2">2</div> Confirmacion — Cambio de estructura 4H / 1H</div>
       <span class="bsc" id="bs2">— pts</span>
     </div>
-    <p style="font-size:12px;color:var(--tx3);margin-bottom:10px;font-style:italic">¿El mercado está confirmando mi hipótesis?</p>
+    <p style="font-size:12px;color:var(--tx3);margin-bottom:10px;font-style:italic">¿El mercado esta confirmando mi hipotesis?</p>
     <div class="lw">
-      <button class="lb" id="b2-s" onclick="setLv(2,'s',this)"><span>Cambio de estructura limpio con fuerza + zona de reacción clara con 3 niveles</span><span class="pt">20 pts</span></button>
+      <button class="lb" id="b2-s" onclick="setLv(2,'s',this)"><span>Cambio de estructura limpio con fuerza + zona de reaccion clara con 3 niveles</span><span class="pt">20 pts</span></button>
+      <button class="lb" id="b2-f" onclick="setLv(2,'f',this)"><span>Fractal mayor indica ChoCh/BOS — salto directo a trigger 15M / 5M (marco intermedio no aplica)</span><span class="pt">15 pts</span></button>
       <button class="lb" id="b2-w" onclick="setLv(2,'w',this)"><span>Cambio de estructura con mecha o BOS con mecha — niveles poco claros</span><span class="pt">10 pts</span></button>
-      <button class="lb" id="b2-n" onclick="setLv(2,'n',this)"><span>No hay cambio de carácter → No operar</span><span class="pt">0 pts · Bloquea</span></button>
+      <button class="lb" id="b2-n" onclick="setLv(2,'n',this)"><span>No hay cambio de caracter → No operar</span><span class="pt">0 pts · Bloquea</span></button>
     </div>
   </div>
 
@@ -470,8 +471,8 @@ nav{display:flex;border-bottom:1px solid var(--bd);background:var(--sur);overflo
     </div>
     <p style="font-size:12px;color:var(--tx3);margin-bottom:10px;font-style:italic">¿El swap favorece o penaliza mantener la posición?</p>
     <div class="lw">
-      <button class="lb" id="b5b-s" onclick="setLv('5b','s',this)"><span>Swap positivo — favorable mantener la posición overnight</span><span class="pt">10 pts</span></button>
-      <button class="lb" id="b5b-n" onclick="setLv('5b','n',this)"><span>Swap negativo — salir el mismo día preferiblemente</span><span class="pt">0 pts</span></button>
+      <button class="lb" id="b5b-s" onclick="setLv('5b','s',this)"><span>Swap positivo — favorable mantener la posicion overnight</span><span class="pt">10 pts</span></button>
+      <button class="lb" id="b5b-n" onclick="setLv('5b','n',this)"><span>Swap negativo — salir el mismo dia preferiblemente</span><span class="pt">5 pts</span></button>
     </div>
     <div id="swap-warning" style="display:none;margin-top:10px;background:var(--amb);border:1px solid var(--am);border-radius:var(--ra);padding:10px 14px;font-size:12.5px;color:var(--am)">
       Swap negativo — si no puedes cerrar hoy, el costo de financiamiento reducira tu P&L. Prioriza cierre intraday.
@@ -1069,20 +1070,24 @@ function getSess(t){
 function setLv(b,lv,btn){
   const bStr=String(b);
   blv[bStr]=lv;
-  ['s','w','n'].forEach(l=>{const el=document.getElementById('b'+bStr+'-'+l);if(el)el.className='lb';});
+  ['s','f','w','n'].forEach(l=>{const el=document.getElementById('b'+bStr+'-'+l);if(el)el.className='lb';});
   btn.className='lb '+(lv==='s'?'ss':lv==='w'?'sw2':'sn2');
   const maxPts={'1':20,'2':20,'3':20,'4':20,'5b':10,'6':10};
   const max=maxPts[bStr]||20;
-  const pts=lv==='s'?max:lv==='w'?Math.round(max/2):0;
+  // f = fractal mayor = 15pts (only for block 2)
+  const pts=lv==='s'?max:lv==='f'?15:lv==='w'?Math.round(max/2):0;
   const bsEl=document.getElementById('bs'+bStr);
   if(bsEl){bsEl.textContent=pts+' pts';bsEl.className='bsc'+(lv==='w'?' sw':lv==='n'?' sz':'');}
   const bnEl=document.getElementById('bn'+bStr);
   if(bnEl)bnEl.className='bnum';
-  // Swap warning — no bloquea, solo avisa
+  // Swap warning — never blocks, gives 5pts if negative
   if(bStr==='5b'){
     const sw=document.getElementById('swap-warning');
     if(sw)sw.style.display=lv==='n'?'block':'none';
-    // Always unlock next regardless of swap result
+    // Override pts: positive=10, negative=5
+    const pts5b=lv==='s'?10:5;
+    if(bsEl){bsEl.textContent=pts5b+' pts';bsEl.className='bsc'+(lv==='n'?' sw':'');}
+    // Always unlock next block regardless
     unlockB('6');
     updateScore();
     return;
@@ -1097,11 +1102,13 @@ function setLv(b,lv,btn){
 
 function updateScore(){
   const maxPts={'1':20,'2':20,'3':20,'4':20,'5b':10,'6':10};
-  const hasN=Object.values(blv).some(v=>v==='n');
+  const hasN=Object.entries(blv).some(([k,v])=>v==='n'&&k!=='5b');
   const filled=Object.values(blv).filter(v=>v!==null).length;
   const total=hasN?0:Object.entries(blv).reduce((s,[k,v])=>{
     if(!v)return s;
     const m=maxPts[k]||0;
+    if(k==='5b'&&v==='n')return s+5;
+    if(v==='f')return s+15; // fractal mayor = 15pts
     return s+(v==='s'?m:v==='w'?Math.round(m/2):0);
   },0);
   const el=document.getElementById('sd-big');
@@ -1734,8 +1741,8 @@ function saveTrade(mode='complete'){
   const dm=dir==='Buy'?1:-1;
   const rd=(entry&&sl)?Math.abs(entry-sl):null;
   const maxPts={'1':20,'2':20,'3':20,'4':20,'5b':10,'6':10};
-  const hasN=Object.values(blv).some(v=>v==='n');
-  const scoreTotal=Object.values(blv).some(v=>v!==null)?(hasN?0:Object.entries(blv).reduce((s,[k,v])=>{if(!v)return s;const m=maxPts[k]||0;return s+(v==='s'?m:v==='w'?Math.round(m/2):0);},0)):null;
+  const hasN=Object.entries(blv).some(([k,v])=>v==='n'&&k!=='5b');
+  const scoreTotal=Object.values(blv).some(v=>v!==null)?(hasN?0:Object.entries(blv).reduce((s,[k,v])=>{if(!v)return s;const m=maxPts[k]||0;if(k==='5b'&&v==='n')return s+5;if(v==='f')return s+15;return s+(v==='s'?m:v==='w'?Math.round(m/2):0);},0)):null;
   trades.push({
     id:Date.now(),status:mode,dir,lot:document.getElementById('tlot').value,
     di,ti:time,do_:document.getElementById('tdo').value,
